@@ -4,297 +4,346 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Metropolis Youth Network</title>
-<meta name="description" content="Rețeaua teatrelor de tineret independente și private din Europa — un proiect Teatrul Metropolis." />
+<meta name="description" content="Platformă internă Teatrul Metropolis — rețeaua teatrelor de tineret independente din Europa." />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ==" crossorigin="" referrerpolicy="no-referrer" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" referrerpolicy="no-referrer" />
 <style>
   :root{
-    --bg:#0c0c0e;
-    --bg-2:#141417;
-    --bg-3:#1b1b20;
-    --line:#2a2a31;
-    --txt:#f4f3f1;
-    --muted:#a9a7a2;
-    --faint:#76747012;
-    --red:#d81f26;
-    --red-2:#ff3b43;
-    --white:#ffffff;
-    --radius:14px;
-    --shadow:0 18px 50px rgba(0,0,0,.45);
-    --maxw:1180px;
+    --paper:#f4f1e9; --paper-2:#fbfaf6; --card:#ffffff;
+    --ink:#1b1915; --ink-soft:#4a463e; --muted:#7c766b; --faint:#a39c8d;
+    --line:#e5dfd1; --line-2:#d8d0bd;
+    --red:#c0271f; --red-2:#9f1f18; --red-soft:#fbeceb;
+    --gold:#8a6d2f;
+    --radius:16px; --radius-s:10px;
+    --shadow:0 1px 2px rgba(30,25,15,.05),0 12px 34px rgba(60,48,20,.09);
+    --shadow-soft:0 1px 2px rgba(30,25,15,.05),0 6px 18px rgba(60,48,20,.06);
+    --maxw:1200px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#15140f; --paper-2:#1b1a14; --card:#201e17;
+      --ink:#f3efe4; --ink-soft:#d7d1c2; --muted:#a39c8c; --faint:#726c5e;
+      --line:#312e24; --line-2:#3c3930;
+      --red:#e2564c; --red-2:#ff6a60; --red-soft:#2a1715;
+      --gold:#c9a24a;
+      --shadow:0 1px 2px rgba(0,0,0,.4),0 14px 40px rgba(0,0,0,.5);
+      --shadow-soft:0 1px 2px rgba(0,0,0,.4),0 8px 22px rgba(0,0,0,.4);
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#15140f; --paper-2:#1b1a14; --card:#201e17;
+    --ink:#f3efe4; --ink-soft:#d7d1c2; --muted:#a39c8c; --faint:#726c5e;
+    --line:#312e24; --line-2:#3c3930;
+    --red:#e2564c; --red-2:#ff6a60; --red-soft:#2a1715;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 14px 40px rgba(0,0,0,.5);
+    --shadow-soft:0 1px 2px rgba(0,0,0,.4),0 8px 22px rgba(0,0,0,.4);
   }
   *{box-sizing:border-box}
   html{scroll-behavior:smooth}
-  body{
-    margin:0;background:var(--bg);color:var(--txt);
-    font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
-    line-height:1.55;-webkit-font-smoothing:antialiased;
-  }
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased}
   a{color:inherit}
-  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 20px}
-  .serif{font-family:'Playfair Display',Georgia,serif}
+  button{font-family:inherit}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 22px}
+  .serif{font-family:'Fraunces',Georgia,serif}
 
-  /* ---------- Header ---------- */
-  header.site{
-    position:sticky;top:0;z-index:50;
-    background:rgba(12,12,14,.86);backdrop-filter:blur(12px);
-    border-bottom:1px solid var(--line);
-  }
-  .bar{display:flex;align-items:center;gap:18px;padding:12px 0;flex-wrap:wrap}
-  .brand{display:flex;align-items:center;gap:14px;text-decoration:none;flex:0 0 auto}
-  .brand img{height:52px;width:auto;display:block;border-radius:6px}
-  .brand .bn{display:flex;flex-direction:column;line-height:1.05}
-  .brand .bn b{font-size:1.02rem;letter-spacing:.14em;text-transform:uppercase}
-  .brand .bn span{font-size:.72rem;color:var(--muted);letter-spacing:.04em}
-  .brand:hover .bn b{color:var(--red-2)}
+  /* ===== Login gate ===== */
+  #gate{position:fixed;inset:0;z-index:200;display:grid;place-items:center;
+    background:radial-gradient(900px 500px at 50% -10%, rgba(192,39,31,.12), transparent 60%), var(--paper)}
+  .gate-card{width:min(440px,92vw);background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:34px 30px;text-align:center}
+  .gate-logo{width:112px;height:auto;border-radius:10px;background:#000;padding:10px;margin-bottom:14px}
+  .gate-card h1{font-size:1.5rem;margin:.2rem 0 .1rem}
+  .gate-card p{color:var(--muted);font-size:.92rem;margin:.2rem 0 18px}
+  .gate-card input{width:100%;padding:13px 15px;border:1px solid var(--line-2);border-radius:999px;background:var(--paper-2);
+    color:var(--ink);font:inherit;font-size:1rem;text-align:center}
+  .gate-card input:focus{outline:none;border-color:var(--red)}
+  .gate-card button{margin-top:14px;width:100%;padding:13px;border:0;border-radius:999px;background:var(--red);color:#fff;
+    font-weight:700;font-size:1rem;cursor:pointer;transition:.15s}
+  .gate-card button:hover{background:var(--red-2)}
+  .gate-note{margin-top:14px;font-size:.78rem;color:var(--faint)}
 
-  nav.tabs{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
-  nav.tabs button{
-    appearance:none;border:0;background:transparent;color:var(--muted);
-    font:inherit;font-weight:600;font-size:.9rem;cursor:pointer;
-    padding:9px 14px;border-radius:999px;transition:.18s;white-space:nowrap;
-  }
-  nav.tabs button:hover{color:var(--txt);background:var(--bg-3)}
-  nav.tabs button.active{color:var(--white);background:var(--red)}
+  /* ===== Header ===== */
+  header.site{position:sticky;top:0;z-index:50;background:color-mix(in srgb, var(--paper) 86%, transparent);
+    backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+  .bar{display:flex;align-items:center;gap:16px;padding:12px 0;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:13px;text-decoration:none;flex:0 0 auto}
+  .brand .logo-box{background:#000;border-radius:9px;padding:7px 9px;display:flex}
+  .brand img{height:38px;width:auto;display:block}
+  .brand .bn{display:flex;flex-direction:column;line-height:1.08}
+  .brand .bn b{font-size:1rem;letter-spacing:.02em;font-family:'Fraunces',serif;font-weight:700}
+  .brand .bn span{font-size:.72rem;color:var(--muted)}
+  .brand:hover .bn b{color:var(--red)}
+  nav.tabs{display:flex;gap:3px;margin-left:auto;flex-wrap:wrap}
+  nav.tabs button{appearance:none;border:0;background:transparent;color:var(--ink-soft);font:inherit;font-weight:600;
+    font-size:.9rem;cursor:pointer;padding:9px 13px;border-radius:999px;transition:.15s;white-space:nowrap}
+  nav.tabs button:hover{background:var(--paper-2);color:var(--ink)}
+  nav.tabs button.active{background:var(--ink);color:var(--paper)}
+  .userchip{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:999px;
+    padding:5px 6px 5px 13px;font-size:.84rem;font-weight:600}
+  .userchip .av{width:26px;height:26px;border-radius:50%;background:var(--red);color:#fff;display:grid;place-items:center;font-size:.78rem;font-weight:700}
+  .userchip button{border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:.78rem;text-decoration:underline}
 
-  /* ---------- Panels ---------- */
-  main{padding:34px 0 80px}
-  .panel{display:none;animation:fade .35s ease}
+  main{padding:34px 0 90px}
+  .panel{display:none;animation:fade .3s ease}
   .panel.active{display:block}
-  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .eyebrow{color:var(--red);font-weight:700;letter-spacing:.16em;text-transform:uppercase;font-size:.72rem}
+  h1.hero{font-size:clamp(2.2rem,5.2vw,4rem);line-height:1.02;margin:.4rem 0 .5rem;font-weight:900;letter-spacing:-.015em}
+  h2.sec{font-size:clamp(1.5rem,3vw,2.1rem);margin:0 0 .25rem;font-weight:700}
+  .lead{color:var(--ink-soft);font-size:1.06rem;max-width:64ch}
 
-  .eyebrow{color:var(--red-2);font-weight:700;letter-spacing:.18em;text-transform:uppercase;font-size:.74rem}
-  h1.hero{font-size:clamp(2.1rem,5vw,3.9rem);line-height:1.04;margin:.35rem 0 .6rem;font-weight:800;letter-spacing:-.01em}
-  h2.sec{font-size:clamp(1.5rem,3vw,2.2rem);margin:0 0 .3rem;font-weight:700}
-  .lead{color:var(--muted);font-size:1.08rem;max-width:62ch}
-
-  /* ---------- Hero ---------- */
-  .hero-wrap{position:relative;border:1px solid var(--line);border-radius:var(--radius);
-    background:
-      radial-gradient(1200px 400px at 85% -10%, rgba(216,31,38,.22), transparent 60%),
-      linear-gradient(180deg,var(--bg-2),var(--bg));
-    padding:48px 40px;overflow:hidden}
-  .hero-wrap::after{content:"";position:absolute;right:-60px;bottom:-80px;width:360px;height:360px;
-    background:radial-gradient(circle,rgba(216,31,38,.14),transparent 70%);pointer-events:none}
-  .cta{display:inline-flex;align-items:center;gap:9px;margin-top:22px;
-    background:var(--red);color:#fff;text-decoration:none;font-weight:700;
-    padding:12px 22px;border-radius:999px;border:0;cursor:pointer;font-size:.95rem;transition:.18s}
+  /* ===== Hero ===== */
+  .hero-wrap{position:relative;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;
+    background:linear-gradient(180deg,var(--paper-2),var(--card));padding:46px 40px;box-shadow:var(--shadow-soft)}
+  .hero-wrap::before{content:"";position:absolute;right:-80px;top:-80px;width:320px;height:320px;
+    background:radial-gradient(circle,rgba(192,39,31,.1),transparent 70%)}
+  .cta{display:inline-flex;align-items:center;gap:8px;margin-top:20px;background:var(--red);color:#fff;text-decoration:none;
+    font-weight:700;padding:12px 22px;border:0;border-radius:999px;cursor:pointer;font-size:.95rem;transition:.15s}
   .cta:hover{background:var(--red-2);transform:translateY(-1px)}
-  .cta.ghost{background:transparent;border:1px solid var(--line);color:var(--txt);margin-left:10px}
-  .cta.ghost:hover{border-color:var(--red-2);color:var(--red-2)}
+  .cta.ghost{background:transparent;border:1px solid var(--line-2);color:var(--ink);margin-left:8px}
+  .cta.ghost:hover{border-color:var(--red);color:var(--red);transform:translateY(-1px)}
 
-  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:34px}
-  .stat{background:var(--bg-2);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
-  .stat b{display:block;font-size:2rem;font-weight:800;color:var(--white);font-family:'Playfair Display',serif}
-  .stat span{color:var(--muted);font-size:.85rem}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:30px}
+  .stat{text-align:left;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;
+    cursor:pointer;transition:.18s;font:inherit;color:inherit}
+  .stat:hover{transform:translateY(-3px);border-color:var(--red);box-shadow:var(--shadow)}
+  .stat b{display:block;font-size:2.1rem;font-weight:900;font-family:'Fraunces',serif;line-height:1}
+  .stat span{color:var(--muted);font-size:.84rem;display:block;margin-top:6px}
+  .stat .arrow{color:var(--red);font-size:.78rem;font-weight:700;margin-top:10px;display:inline-block;opacity:0;transition:.18s}
+  .stat:hover .arrow{opacity:1}
 
-  .grid-feat{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:40px}
-  .card{background:var(--bg-2);border:1px solid var(--line);border-radius:var(--radius);padding:22px;transition:.2s}
-  .card:hover{border-color:#3a3a44;transform:translateY(-2px)}
-  .card h3{margin:.1rem 0 .4rem;font-size:1.12rem}
-  .card p{color:var(--muted);margin:0;font-size:.92rem}
-  .card .ico{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;
-    background:rgba(216,31,38,.14);color:var(--red-2);font-size:1.2rem;margin-bottom:10px}
+  .grid-feat{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-top:38px}
+  .fcard{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px;transition:.18s}
+  .fcard:hover{transform:translateY(-2px);box-shadow:var(--shadow-soft)}
+  .fcard .ico{width:42px;height:42px;border-radius:11px;display:grid;place-items:center;background:var(--red-soft);color:var(--red);font-size:1.2rem;margin-bottom:10px}
+  .fcard h3{margin:.1rem 0 .35rem;font-size:1.08rem}
+  .fcard p{color:var(--muted);margin:0;font-size:.9rem}
 
-  /* ---------- Toolbar (directory) ---------- */
-  .toolbar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:22px 0 18px}
-  .search{flex:1;min-width:240px;position:relative}
-  .search input{width:100%;background:var(--bg-2);border:1px solid var(--line);border-radius:999px;
-    color:var(--txt);font:inherit;padding:12px 16px 12px 42px}
-  .search input::placeholder{color:#6f6d69}
-  .search svg{position:absolute;left:15px;top:50%;transform:translateY(-50%);opacity:.6}
-  select.filter{background:var(--bg-2);border:1px solid var(--line);border-radius:999px;color:var(--txt);
-    font:inherit;padding:11px 16px;cursor:pointer}
-  .count-pill{color:var(--muted);font-size:.85rem;margin-left:auto}
+  /* ===== Toolbar ===== */
+  .toolbar{display:flex;gap:11px;flex-wrap:wrap;align-items:center;margin:22px 0 18px}
+  .search{flex:1;min-width:220px;position:relative}
+  .search input{width:100%;background:var(--card);border:1px solid var(--line-2);border-radius:999px;color:var(--ink);
+    font:inherit;padding:11px 16px 11px 40px}
+  .search input:focus{outline:none;border-color:var(--red)}
+  .search svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);opacity:.5}
+  select.filter{background:var(--card);border:1px solid var(--line-2);border-radius:999px;color:var(--ink);font:inherit;padding:10px 14px;cursor:pointer}
+  .count-pill{color:var(--muted);font-size:.84rem}
+  .spacer{margin-left:auto}
+  .btn-add{display:inline-flex;align-items:center;gap:7px;background:var(--red);color:#fff;border:0;border-radius:999px;
+    padding:10px 17px;font-weight:700;font-size:.88rem;cursor:pointer;transition:.15s}
+  .btn-add:hover{background:var(--red-2)}
 
-  /* ---------- Theatre cards ---------- */
-  .list{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
-  .t-card{background:var(--bg-2);border:1px solid var(--line);border-radius:var(--radius);
-    padding:20px;display:flex;flex-direction:column;gap:10px;transition:.2s}
-  .t-card:hover{border-color:var(--red);box-shadow:var(--shadow);transform:translateY(-3px)}
+  /* ===== Theatre cards ===== */
+  .list{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:16px}
+  .t-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;display:flex;
+    flex-direction:column;gap:9px;transition:.18s;position:relative}
+  .t-card:hover{border-color:var(--line-2);box-shadow:var(--shadow);transform:translateY(-2px)}
   .t-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
-  .t-card h3{margin:0;font-size:1.14rem;line-height:1.25}
-  .flag{font-size:1.4rem;line-height:1;flex:0 0 auto}
-  .t-loc{color:var(--red-2);font-weight:600;font-size:.86rem}
-  .t-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
-  .chip{font-size:.72rem;background:var(--bg-3);border:1px solid var(--line);color:var(--muted);
-    padding:3px 9px;border-radius:999px}
-  .chip.year{color:var(--txt)}
-  .t-focus{font-weight:600;font-size:.95rem}
-  .t-note{color:var(--muted);font-size:.88rem;margin:0}
-  .t-foot{margin-top:auto;padding-top:8px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
-  .t-web{color:var(--red-2);text-decoration:none;font-weight:600;font-size:.86rem;display:inline-flex;align-items:center;gap:6px}
+  .t-card h3{margin:0;font-size:1.12rem;line-height:1.25;font-family:'Fraunces',serif;font-weight:600;padding-right:4px}
+  .flag{font-size:1.35rem;line-height:1;flex:0 0 auto}
+  .t-loc{color:var(--red);font-weight:600;font-size:.83rem}
+  .t-meta{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{font-size:.71rem;background:var(--paper-2);border:1px solid var(--line);color:var(--ink-soft);padding:3px 9px;border-radius:999px}
+  .chip.year{font-weight:600}
+  .chip.new{background:var(--red-soft);color:var(--red);border-color:transparent;font-weight:600}
+  .t-focus{font-weight:600;font-size:.94rem}
+  .t-desc{color:var(--muted);font-size:.87rem;margin:0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .t-foot{margin-top:auto;padding-top:11px;border-top:1px solid var(--line);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .t-btn{border:1px solid var(--line-2);background:var(--paper-2);color:var(--ink);border-radius:999px;padding:6px 13px;
+    font-size:.8rem;font-weight:600;cursor:pointer;transition:.15s}
+  .t-btn:hover{border-color:var(--red);color:var(--red)}
+  .t-btn.primary{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  .t-btn.primary:hover{background:var(--red);border-color:var(--red);color:#fff}
+  .t-web{margin-left:auto;color:var(--red);text-decoration:none;font-weight:600;font-size:.82rem}
   .t-web:hover{text-decoration:underline}
-  .t-web.none{color:#6f6d69;font-weight:500}
-  .t-form{color:var(--muted);font-size:.78rem}
+  .t-web.none{color:var(--faint);font-weight:500}
+  .icon-del{position:absolute;top:12px;right:12px;width:26px;height:26px;border-radius:50%;border:1px solid var(--line);
+    background:var(--card);color:var(--muted);cursor:pointer;display:none;place-items:center;font-size:.9rem;line-height:1}
+  .t-card:hover .icon-del{display:grid}
+  .icon-del:hover{background:var(--red);color:#fff;border-color:var(--red)}
+  .empty{text-align:center;color:var(--muted);padding:56px 20px}
 
-  .empty{text-align:center;color:var(--muted);padding:60px 20px}
+  /* ===== Countries ===== */
+  .country-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:13px;margin-top:22px}
+  .c-card{text-align:left;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:17px;cursor:pointer;transition:.18s;font:inherit;color:inherit}
+  .c-card:hover{border-color:var(--red);transform:translateY(-2px);box-shadow:var(--shadow-soft)}
+  .c-card .cf{font-size:1.9rem}
+  .c-card h3{margin:.35rem 0 .1rem;font-size:1.02rem;font-family:'Fraunces',serif}
+  .c-card .cc-count{color:var(--red);font-weight:700;font-size:.9rem}
+  .c-card .cc-cities{color:var(--muted);font-size:.8rem;margin-top:3px}
 
-  /* ---------- Countries ---------- */
-  .country-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-top:24px}
-  .c-card{background:var(--bg-2);border:1px solid var(--line);border-radius:var(--radius);padding:18px;cursor:pointer;transition:.2s}
-  .c-card:hover{border-color:var(--red);transform:translateY(-2px)}
-  .c-card .cf{font-size:2rem}
-  .c-card h3{margin:.4rem 0 .1rem;font-size:1.05rem}
-  .c-card .cc-count{color:var(--red-2);font-weight:700}
-  .c-card .cc-cities{color:var(--muted);font-size:.82rem;margin-top:4px}
+  /* ===== Map ===== */
+  #map{height:560px;border:1px solid var(--line);border-radius:var(--radius);margin-top:18px;background:var(--card);z-index:1}
+  .leaflet-popup-content-wrapper{border-radius:12px}
+  .pop b{font-size:1rem;font-family:'Fraunces',serif}
+  .pop .pl{color:var(--red);font-size:.78rem;font-weight:600}
+  .pop a{color:var(--red)}
 
-  /* ---------- Map ---------- */
-  #map{height:560px;border:1px solid var(--line);border-radius:var(--radius);margin-top:20px;background:var(--bg-2)}
-  .leaflet-popup-content-wrapper{background:var(--bg-2);color:var(--txt);border-radius:10px}
-  .leaflet-popup-tip{background:var(--bg-2)}
-  .leaflet-popup-content{margin:12px 14px}
-  .pop b{font-size:1rem}
-  .pop .pl{color:var(--red-2);font-size:.8rem;font-weight:600}
-  .pop a{color:var(--red-2)}
+  /* ===== Networks ===== */
+  .net-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:15px;margin-top:22px}
 
-  /* ---------- Networks ---------- */
-  .net-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-top:24px}
+  /* ===== Activity ===== */
+  .act-list{margin-top:22px;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--card)}
+  .act-row{display:flex;align-items:center;gap:13px;padding:14px 18px;border-bottom:1px solid var(--line)}
+  .act-row:last-child{border-bottom:0}
+  .act-badge{flex:0 0 auto;width:34px;height:34px;border-radius:9px;display:grid;place-items:center;font-size:.95rem}
+  .act-badge.add{background:#e7f3ea;color:#1f7a43}
+  .act-badge.delete{background:var(--red-soft);color:var(--red)}
+  .act-badge.edit{background:#eef1f7;color:#3a5bb5}
+  :root[data-theme="dark"] .act-badge.add{background:#13301f;color:#5fcf86}
+  :root[data-theme="dark"] .act-badge.edit{background:#171d2e;color:#8aa6ff}
+  .act-main{flex:1;min-width:0}
+  .act-main b{font-weight:600}
+  .act-main .sub{color:var(--muted);font-size:.82rem}
+  .act-time{color:var(--faint);font-size:.78rem;white-space:nowrap}
 
-  /* ---------- About / prose ---------- */
-  .prose{max-width:74ch}
-  .prose p{color:#d8d6d2}
-  .prose h3{margin-top:28px;font-size:1.25rem}
-  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:28px}
-  .box{background:var(--bg-2);border:1px solid var(--line);border-radius:var(--radius);padding:22px}
-  .box ul{margin:.4rem 0 0;padding-left:18px;color:var(--muted)}
-  .box li{margin:.3rem 0}
+  /* ===== Modal ===== */
+  .overlay{position:fixed;inset:0;z-index:100;background:rgba(20,16,8,.5);backdrop-filter:blur(3px);display:none;
+    align-items:flex-start;justify-content:center;padding:40px 16px;overflow:auto}
+  .overlay.open{display:flex}
+  .modal{width:min(720px,100%);background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+  .modal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:22px 24px;border-bottom:1px solid var(--line)}
+  .modal-head h2{margin:0;font-size:1.4rem;font-family:'Fraunces',serif;font-weight:700}
+  .modal-head .mh-loc{color:var(--red);font-weight:600;font-size:.86rem;margin-top:3px}
+  .modal-x{border:1px solid var(--line);background:var(--paper-2);border-radius:50%;width:34px;height:34px;cursor:pointer;font-size:1.1rem;color:var(--muted);flex:0 0 auto}
+  .modal-x:hover{background:var(--red);color:#fff;border-color:var(--red)}
+  .modal-body{padding:22px 24px;max-height:68vh;overflow:auto}
+  .dl{display:grid;grid-template-columns:150px 1fr;gap:10px 16px;margin:0}
+  .dl dt{color:var(--muted);font-size:.82rem;font-weight:600;padding-top:2px}
+  .dl dd{margin:0;font-size:.92rem}
+  .detail-sec{margin-top:18px}
+  .detail-sec h4{margin:0 0 7px;font-size:.78rem;text-transform:uppercase;letter-spacing:.1em;color:var(--red)}
+  .detail-sec ul{margin:0;padding-left:18px}
+  .detail-sec li{margin:3px 0;font-size:.9rem}
+  .detail-desc{font-size:.96rem;line-height:1.6;color:var(--ink-soft)}
+  .modal-foot{padding:16px 24px;border-top:1px solid var(--line);display:flex;gap:9px;flex-wrap:wrap;align-items:center}
 
-  /* ---------- Contact ---------- */
-  .contact-card{background:
-      radial-gradient(800px 260px at 90% -20%, rgba(216,31,38,.2), transparent 60%),
-      var(--bg-2);
-    border:1px solid var(--line);border-radius:var(--radius);padding:40px;margin-top:20px}
-  .mailto{display:inline-flex;align-items:center;gap:10px;background:var(--red);color:#fff;
-    text-decoration:none;font-weight:700;padding:14px 26px;border-radius:999px;margin-top:14px;font-size:1rem}
-  .mailto:hover{background:var(--red-2)}
+  /* Form */
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px}
+  .field{display:flex;flex-direction:column;gap:5px}
+  .field.full{grid-column:1 / -1}
+  .field label{font-size:.78rem;font-weight:600;color:var(--ink-soft)}
+  .field input,.field select,.field textarea{background:var(--paper-2);border:1px solid var(--line-2);border-radius:var(--radius-s);
+    color:var(--ink);font:inherit;padding:10px 12px;font-size:.92rem}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--red)}
+  .field textarea{resize:vertical;min-height:70px}
+  .field .hint{font-size:.72rem;color:var(--faint)}
 
-  /* ---------- Footer ---------- */
-  footer.site{border-top:1px solid var(--line);padding:34px 0;color:var(--muted);font-size:.86rem}
-  footer .fl{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;align-items:center}
-  footer a{color:var(--red-2);text-decoration:none}
+  footer.site{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-size:.84rem}
+  footer .fl{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;align-items:center}
+  footer a{color:var(--red);text-decoration:none}
+
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--paper);
+    padding:12px 20px;border-radius:999px;font-size:.88rem;font-weight:600;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:.25s;z-index:150}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
   @media (max-width:820px){
     .stats{grid-template-columns:repeat(2,1fr)}
     .grid-feat{grid-template-columns:1fr}
-    .two-col{grid-template-columns:1fr}
-    .hero-wrap{padding:34px 22px}
-    nav.tabs{width:100%;overflow-x:auto;margin-left:0;padding-bottom:4px}
+    .form-grid{grid-template-columns:1fr}
+    .dl{grid-template-columns:1fr}
+    .hero-wrap{padding:32px 22px}
+    nav.tabs{width:100%;overflow-x:auto;margin-left:0}
   }
 </style>
 </head>
 <body>
 
-<!-- ============ HEADER ============ -->
-<header class="site">
+<!-- ===== LOGIN GATE ===== -->
+<div id="gate">
+  <div class="gate-card">
+    <div class="logo-wrap"><img class="gate-logo" src="assets/logo.jpg" alt="Teatrul Metropolis" /></div>
+    <h1 class="serif">Metropolis Youth Network</h1>
+    <p>Platformă internă · Teatrul Metropolis.<br>Intră cu numele tău pentru a continua.</p>
+    <input id="gate-name" type="text" placeholder="Numele tău" autocomplete="name" />
+    <button id="gate-go">Intră în platformă</button>
+    <div class="gate-note">Fără cont și fără parolă — doar numele, pentru a ști cine ce adaugă.</div>
+  </div>
+</div>
+
+<!-- ===== HEADER ===== -->
+<header class="site" style="display:none" id="hdr">
   <div class="wrap bar">
-    <a class="brand" href="https://teatrul-metropolis.ro" target="_blank" rel="noopener" title="Vizitează site-ul Teatrul Metropolis">
-      <img src="assets/logo.jpg" alt="Teatrul Metropolis" />
-      <span class="bn"><b>Youth Network</b><span>un proiect Teatrul Metropolis</span></span>
+    <a class="brand" href="https://teatrul-metropolis.ro" target="_blank" rel="noopener" title="teatrul-metropolis.ro">
+      <span class="logo-box"><img src="assets/logo.jpg" alt="Teatrul Metropolis" /></span>
+      <span class="bn"><b>Youth Network</b><span>platformă internă Metropolis</span></span>
     </a>
     <nav class="tabs" id="tabs">
       <button data-tab="home" class="active">Acasă</button>
-      <button data-tab="dir">Directorul teatrelor</button>
+      <button data-tab="dir">Teatre</button>
       <button data-tab="countries">Pe țări</button>
       <button data-tab="map">Hartă</button>
-      <button data-tab="networks">Rețele &amp; Resurse</button>
-      <button data-tab="about">Despre rețea</button>
-      <button data-tab="contact">Contact</button>
+      <button data-tab="networks">Rețele</button>
+      <button data-tab="activity">Activitate</button>
     </nav>
+    <div class="userchip" id="userchip" style="display:none">
+      <span class="av" id="user-av">?</span><span id="user-name">—</span>
+      <button id="user-switch" title="Schimbă utilizatorul">schimbă</button>
+    </div>
   </div>
 </header>
 
-<main class="wrap">
+<main class="wrap" id="app" style="display:none">
 
-  <!-- ============ HOME ============ -->
+  <!-- HOME -->
   <section class="panel active" id="home">
     <div class="hero-wrap">
       <div class="eyebrow">Metropolis Youth Network</div>
       <h1 class="hero serif">Rețeaua teatrelor de tineret<br>independente din Europa</h1>
-      <p class="lead">O hartă vie a teatrelor de tineret și pentru tânărul public din Europa — asociații, fundații, companii și case de teatru independente de stat. Un instrument de documentare, inspirație și parteneriat, inițiat de <strong>Teatrul Metropolis</strong>, București.</p>
+      <p class="lead">Instrumentul intern al Teatrului Metropolis pentru a cartografia, documenta și contacta teatrele de tineret și pentru tânărul public din Europa — asociații, fundații, companii și case de teatru independente de stat.</p>
       <div>
-        <button class="cta" data-goto="dir">Explorează directorul →</button>
+        <button class="cta" data-goto="dir">Explorează teatrele →</button>
         <button class="cta ghost" data-goto="map">Vezi harta</button>
       </div>
     </div>
 
     <div class="stats">
-      <div class="stat"><b id="s-theatres">—</b><span>teatre documentate</span></div>
-      <div class="stat"><b id="s-countries">—</b><span>țări europene</span></div>
-      <div class="stat"><b id="s-oldest">—</b><span>cel mai vechi (an)</span></div>
-      <div class="stat"><b id="s-networks">—</b><span>rețele &amp; resurse</span></div>
+      <button class="stat" data-goto="dir"><b id="s-theatres">—</b><span>teatre documentate</span><span class="arrow">deschide →</span></button>
+      <button class="stat" data-goto="countries"><b id="s-countries">—</b><span>țări europene</span><span class="arrow">deschide →</span></button>
+      <button class="stat" data-goto="dir" id="stat-oldest"><b id="s-oldest">—</b><span>cel mai vechi (an)</span><span class="arrow">deschide →</span></button>
+      <button class="stat" data-goto="networks"><b id="s-networks">—</b><span>rețele &amp; resurse</span><span class="arrow">deschide →</span></button>
     </div>
 
     <div class="grid-feat">
-      <div class="card">
-        <div class="ico">🎭</div>
-        <h3>Orice formă independentă</h3>
-        <p>De la companii mici conduse de tineri la case de teatru cu zeci de mii de abonați — toate independente sau private de stat.</p>
-      </div>
-      <div class="card">
-        <div class="ico">🔎</div>
-        <h3>Căutare &amp; filtrare</h3>
-        <p>Caută după nume, oraș sau profil și filtrează pe țară și formă de organizare, în directorul detaliat.</p>
-      </div>
-      <div class="card">
-        <div class="ico">🗺️</div>
-        <h3>Hartă interactivă</h3>
-        <p>Vezi unde se află fiecare teatru pe harta Europei și deschide direct site-ul fiecăruia.</p>
-      </div>
-      <div class="card">
-        <div class="ico">🤝</div>
-        <h3>Gândit pentru parteneriate</h3>
-        <p>Un punct de plecare pentru coproducții, mobilități și proiecte europene de teatru tânăr.</p>
-      </div>
-      <div class="card">
-        <div class="ico">🌍</div>
-        <h3>Acoperire pan-europeană</h3>
-        <p>Vest, Nord, Sud, Centru și Est — inclusiv scena independentă din România.</p>
-      </div>
-      <div class="card">
-        <div class="ico">📚</div>
-        <h3>Resurse &amp; finanțare</h3>
-        <p>Rețelele-cadru și programele europene care susțin teatrul pentru copii și tineret.</p>
-      </div>
+      <div class="fcard"><div class="ico">🎭</div><h3>Orice formă independentă</h3><p>De la companii mici conduse de tineri la case de teatru cu zeci de mii de abonați — toate independente sau private de stat.</p></div>
+      <div class="fcard"><div class="ico">✎</div><h3>Completează împreună</h3><p>Oricine din echipă poate adăuga, edita sau șterge un teatru. Toate modificările sunt vizibile la fila Activitate.</p></div>
+      <div class="fcard"><div class="ico">🗺️</div><h3>Hartă &amp; detalii</h3><p>Fiecare teatru are o fișă detaliată — fondatori, sală, producții de referință, programe — și un punct pe harta Europei.</p></div>
     </div>
   </section>
 
-  <!-- ============ DIRECTORY ============ -->
+  <!-- DIRECTORY -->
   <section class="panel" id="dir">
-    <div class="eyebrow">Director</div>
-    <h2 class="sec serif">Directorul teatrelor</h2>
-    <p class="lead">Teatre de tineret independente / private din Europa. Dă click pe site pentru a vizita fiecare instituție.</p>
-
+    <div class="eyebrow">Catalog</div>
+    <h2 class="sec serif">Teatrele rețelei</h2>
+    <p class="lead">Teatre de tineret independente din Europa. Deschide o fișă pentru detalii, sau adaugă un teatru nou.</p>
     <div class="toolbar">
       <div class="search">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-        <input id="q" type="search" placeholder="Caută teatru, oraș sau profil…" autocomplete="off" />
+        <input id="q" type="search" placeholder="Caută teatru, oraș, profil…" autocomplete="off" />
       </div>
       <select class="filter" id="f-country"><option value="">Toate țările</option></select>
-      <select class="filter" id="f-form"><option value="">Toate formele</option></select>
-      <select class="filter" id="f-sort">
-        <option value="name">Sortează: nume</option>
-        <option value="country">Sortează: țară</option>
-        <option value="founded">Sortează: an înființare</option>
-      </select>
-      <span class="count-pill" id="count"></span>
+      <select class="filter" id="f-region"><option value="">Toate regiunile</option></select>
+      <select class="filter" id="f-sort"><option value="name">Nume</option><option value="country">Țară</option><option value="founded">An înființare</option></select>
+      <div class="spacer"></div>
+      <button class="btn-add" id="btn-add">＋ Adaugă teatru</button>
     </div>
-
+    <div style="margin-bottom:12px"><span class="count-pill" id="count"></span></div>
     <div class="list" id="list"></div>
-    <div class="empty" id="empty" style="display:none">Niciun teatru nu corespunde căutării. Încearcă alt termen sau resetează filtrele.</div>
+    <div class="empty" id="empty" style="display:none">Niciun teatru nu corespunde căutării.</div>
   </section>
 
-  <!-- ============ COUNTRIES ============ -->
+  <!-- COUNTRIES -->
   <section class="panel" id="countries">
     <div class="eyebrow">Geografie</div>
     <h2 class="sec serif">Pe țări</h2>
-    <p class="lead">Teatrele grupate pe țări. Dă click pe o țară pentru a o vedea filtrată în director.</p>
+    <p class="lead">Distribuția teatrelor pe țări. Dă click pe o țară pentru a o vedea filtrată.</p>
     <div class="country-grid" id="country-grid"></div>
   </section>
 
-  <!-- ============ MAP ============ -->
+  <!-- MAP -->
   <section class="panel" id="map-panel">
     <div class="eyebrow">Hartă</div>
     <h2 class="sec serif">Harta rețelei</h2>
@@ -302,7 +351,7 @@
     <div id="map"></div>
   </section>
 
-  <!-- ============ NETWORKS ============ -->
+  <!-- NETWORKS -->
   <section class="panel" id="networks">
     <div class="eyebrow">Ecosistem</div>
     <h2 class="sec serif">Rețele &amp; Resurse</h2>
@@ -310,236 +359,407 @@
     <div class="net-grid" id="net-grid"></div>
   </section>
 
-  <!-- ============ ABOUT ============ -->
-  <section class="panel" id="about">
-    <div class="eyebrow">Despre</div>
-    <h2 class="sec serif">Despre Metropolis Youth Network</h2>
-    <div class="prose">
-      <p>Metropolis Youth Network este o inițiativă de documentare și conectare a <strong>Teatrului Metropolis</strong> din București, dedicată cartografierii teatrelor de tineret și pentru tânărul public din Europa, în formele lor independente și private de stat: asociații, fundații, cooperative, companii și case de teatru.</p>
-
-      <h3>De ce o rețea?</h3>
-      <p>Teatrul pentru tineri din Europa este divers și fragmentat. De la modele emancipatoare precum GRIPS Theater (Berlin) la case de teatru cu zeci de mii de abonați precum Theater der Jugend (Viena), de la pionieri ai teatrului pentru bebeluși (La Baracca, Bologna) la companii conduse integral de tineri (Contact, Manchester) — scena e bogată, dar greu de văzut de ansamblu. Acest proiect adună reperele într-un singur loc.</p>
-
-      <div class="two-col">
-        <div class="box">
-          <h3 style="margin-top:0">Criterii de includere</h3>
-          <ul>
-            <li>Organizare independentă sau privată de stat (ONG, asociație, fundație, cooperativă, companie, casă de teatru).</li>
-            <li>Misiune centrată pe copii și/sau tineret — ca public, ca participanți sau ambele.</li>
-            <li>Activitate profesionistă, continuă și documentabilă public.</li>
-            <li>Orice formă estetică: text, mișcare, păpuși, teatru documentar, incluziv, educațional.</li>
-          </ul>
-        </div>
-        <div class="box">
-          <h3 style="margin-top:0">Cum folosești platforma</h3>
-          <ul>
-            <li><strong>Directorul</strong> — caută și filtrează după țară și formă.</li>
-            <li><strong>Pe țări</strong> — vezi distribuția geografică.</li>
-            <li><strong>Harta</strong> — localizează fiecare teatru și deschide-i site-ul.</li>
-            <li><strong>Rețele</strong> — găsește cadrul european și sursele de finanțare.</li>
-          </ul>
-        </div>
-      </div>
-
-      <h3>Notă metodologică</h3>
-      <p>„Independent de stat” este interpretat generos: în majoritatea țărilor europene chiar și teatrele independente primesc o parte din finanțare publică prin granturi concurențiale. Criteriul decisiv aici este <em>organizarea</em> — structuri care nu sunt instituții de stat subordonate direct, ci entități de sine stătătoare. Datele sunt orientative și în continuă completare; sugestiile de corectare sau de adăugare sunt binevenite la adresa de contact.</p>
-    </div>
-  </section>
-
-  <!-- ============ CONTACT ============ -->
-  <section class="panel" id="contact">
-    <div class="eyebrow">Contact</div>
-    <h2 class="sec serif">Propune un teatru sau un parteneriat</h2>
-    <div class="contact-card">
-      <p class="lead" style="margin-top:0">Cunoști un teatru de tineret independent care ar trebui să fie pe hartă? Vrei o coproducție, o mobilitate sau un schimb? Scrie-ne — construim această rețea împreună.</p>
-      <a class="mailto" href="mailto:proiectemetropolis@gmail.com?subject=Metropolis%20Youth%20Network%20%E2%80%93%20propunere&body=Bun%C4%83%20ziua%2C%0A%0AV%C4%83%20scriu%20%C3%AEn%20leg%C4%83tur%C4%83%20cu%20Metropolis%20Youth%20Network.%0A%0ATeatru%2Forganiza%C8%9Bie%3A%20%0A%C8%9Aar%C4%83%20%2F%20ora%C8%99%3A%20%0ASite%3A%20%0ADescriere%20scurt%C4%83%3A%20%0A%0ACu%20stim%C4%83%2C%0A">
-        ✉️ proiectemetropolis@gmail.com
-      </a>
-      <p style="color:var(--muted);margin-top:22px;font-size:.9rem">
-        Teatrul Metropolis · București, România · <a href="https://teatrul-metropolis.ro" target="_blank" rel="noopener" style="color:var(--red-2);text-decoration:none">teatrul-metropolis.ro</a>
-      </p>
-    </div>
+  <!-- ACTIVITY -->
+  <section class="panel" id="activity">
+    <div class="eyebrow">Jurnal</div>
+    <h2 class="sec serif">Activitate</h2>
+    <p class="lead">Istoricul modificărilor din platformă — cine a adăugat, editat sau șters un teatru.</p>
+    <div class="act-list" id="act-list"></div>
+    <div class="empty" id="act-empty" style="display:none">Nicio activitate încă. Adaugă primul teatru nou.</div>
   </section>
 
 </main>
 
-<!-- ============ FOOTER ============ -->
-<footer class="site">
+<footer class="site" id="ftr" style="display:none">
   <div class="wrap fl">
-    <div>© <span id="yr"></span> Metropolis Youth Network — un proiect <a href="https://teatrul-metropolis.ro" target="_blank" rel="noopener">Teatrul Metropolis</a>.</div>
-    <div>Contact: <a href="mailto:proiectemetropolis@gmail.com">proiectemetropolis@gmail.com</a></div>
+    <div>© <span id="yr"></span> Metropolis Youth Network — platformă internă <a href="https://teatrul-metropolis.ro" target="_blank" rel="noopener">Teatrul Metropolis</a>.</div>
+    <div id="storage-note"></div>
   </div>
 </footer>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" integrity="sha512-BwHfrr4c9kmRkLw6iXFdzcdWV/PGkVgiIyIWLLlTSXzWQzxuSg4DiQUCpauz/EWjgk5TYQqX/kvn9pG1NpYfqg==" crossorigin="" referrerpolicy="no-referrer"></script>
-<script src="data.js"></script>
+<!-- ===== DETAIL MODAL ===== -->
+<div class="overlay" id="detail-overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div><h2 id="d-name"></h2><div class="mh-loc" id="d-loc"></div></div>
+      <button class="modal-x" data-close>✕</button>
+    </div>
+    <div class="modal-body" id="d-body"></div>
+    <div class="modal-foot">
+      <a class="t-btn primary" id="d-web" target="_blank" rel="noopener" style="text-decoration:none">Vizitează site-ul ↗</a>
+      <button class="t-btn" id="d-edit">Editează</button>
+      <button class="t-btn" id="d-delete" style="margin-left:auto;color:var(--red);border-color:var(--red)">Șterge</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== FORM MODAL ===== -->
+<div class="overlay" id="form-overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div><h2 id="f-title">Adaugă teatru</h2><div class="mh-loc">Completează ce știi — doar numele, țara și orașul sunt obligatorii.</div></div>
+      <button class="modal-x" data-close>✕</button>
+    </div>
+    <div class="modal-body">
+      <form id="theatre-form" class="form-grid" autocomplete="off">
+        <div class="field full"><label>Nume teatru *</label><input name="name" required /></div>
+        <div class="field"><label>Țară *</label><input name="country" required /></div>
+        <div class="field"><label>Cod țară (2 litere, pt. steag)</label><input name="cc" maxlength="2" placeholder="ex. de, fr, it" /></div>
+        <div class="field"><label>Oraș *</label><input name="city" required /></div>
+        <div class="field"><label>Regiune</label><select name="region"><option value="">—</option><option>Vest</option><option>Nord</option><option>Sud</option><option>Centru</option><option>Est</option></select></div>
+        <div class="field"><label>An înființare</label><input name="founded" type="number" min="1800" max="2100" /></div>
+        <div class="field"><label>Public-țintă (vârste)</label><input name="ages" placeholder="ex. 12–20" /></div>
+        <div class="field"><label>Formă de organizare</label><input name="form" placeholder="ex. ONG / asociație / companie" /></div>
+        <div class="field"><label>Limbi</label><input name="languages" /></div>
+        <div class="field full"><label>Profil artistic</label><input name="focus" /></div>
+        <div class="field"><label>Fondatori</label><input name="founders" /></div>
+        <div class="field"><label>Sală / sediu</label><input name="venue" /></div>
+        <div class="field full"><label>Producții de referință <span class="hint">(separate prin virgulă)</span></label><input name="notable" /></div>
+        <div class="field full"><label>Programe <span class="hint">(separate prin virgulă)</span></label><input name="programs" /></div>
+        <div class="field full"><label>Descriere</label><textarea name="description"></textarea></div>
+        <div class="field full"><label>Site web</label><input name="web" placeholder="ex. teatru.ro" /></div>
+      </form>
+    </div>
+    <div class="modal-foot">
+      <button class="t-btn primary" id="f-save">Salvează</button>
+      <button class="t-btn" data-close>Renunță</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" referrerpolicy="no-referrer"></script>
 <script>
 (function(){
   "use strict";
-  var DATA = window.MYN_DATA || [];
-  var NETS = window.MYN_NETWORKS || [];
+  var $ = function(s,r){return (r||document).querySelector(s);};
+  var $$ = function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));};
+  function esc(s){return (s==null?"":String(s)).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c];});}
+  function flag(cc){ if(!cc) return "🏛️"; return cc.toUpperCase().replace(/./g,function(c){return String.fromCodePoint(127397+c.charCodeAt(0));}); }
 
-  /* flag emoji from ISO code */
-  function flag(cc){
-    if(!cc) return "🏳️";
-    return cc.toUpperCase().replace(/./g,function(c){
-      return String.fromCodePoint(127397 + c.charCodeAt(0));
-    });
-  }
-  function esc(s){return (s==null?"":String(s)).replace(/[&<>"]/g,function(c){
-    return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c];});}
-
-  /* approximate coordinates by city */
   var COORDS = {
-    "Londra":[51.5072,-0.1276],"Glasgow":[55.8642,-4.2518],"Manchester":[53.4808,-2.2426],
-    "Dublin":[53.3498,-6.2603],"Berlin":[52.52,13.405],"Köln":[50.9375,6.9603],
-    "Hamm":[51.6739,7.815],"Viena":[48.2082,16.3738],"Basel":[47.5596,7.5886],
-    "Rotterdam":[51.9244,4.4777],"Amsterdam":[52.3676,4.9041],"'s-Hertogenbosch":[51.6978,5.3037],
-    "Bruxelles":[50.8503,4.3517],"Anvers":[51.2194,4.4025],"Gent":[51.0543,3.7174],
-    "Leuven":[50.8798,4.7005],"Stockholm":[59.3293,18.0686],"Linköping":[58.4109,15.6216],
-    "Copenhaga":[55.6761,12.5683],"Oslo":[59.9139,10.7522],"Bologna":[44.4949,11.3426],
-    "Parma":[44.8015,10.3279],"Perugia":[43.1107,12.3908],"Madrid":[40.4168,-3.7038],
-    "Palmela / Lisabona":[38.5706,-8.9009],"Praga":[50.0755,14.4378],"Varșovia":[52.2297,21.0122],
-    "Budapesta":[47.4979,19.0402],"Zagreb":[45.815,15.9819],"București":[44.4268,26.1025],
-    "Alexandria":[43.9711,25.3329],"Cluj-Napoca":[46.7712,23.6236]
+    "Londra":[51.5072,-0.1276],"Glasgow":[55.8642,-4.2518],"Manchester":[53.4808,-2.2426],"Dublin":[53.3498,-6.2603],
+    "Berlin":[52.52,13.405],"Köln":[50.9375,6.9603],"Hamm":[51.6739,7.815],"Viena":[48.2082,16.3738],"Basel":[47.5596,7.5886],
+    "Rotterdam":[51.9244,4.4777],"Amsterdam":[52.3676,4.9041],"'s-Hertogenbosch":[51.6978,5.3037],"Bruxelles":[50.8503,4.3517],
+    "Anvers":[51.2194,4.4025],"Gent":[51.0543,3.7174],"Leuven":[50.8798,4.7005],"Stockholm":[59.3293,18.0686],
+    "Linköping":[58.4109,15.6216],"Copenhaga":[55.6761,12.5683],"Oslo":[59.9139,10.7522],"Bologna":[44.4949,11.3426],
+    "Parma":[44.8015,10.3279],"Perugia":[43.1107,12.3908],"Madrid":[40.4168,-3.7038],"Palmela / Lisabona":[38.69,-9.0],
+    "Praga":[50.0755,14.4378],"Varșovia":[52.2297,21.0122],"Budapesta":[47.4979,19.0402],"Zagreb":[45.815,15.9819]
   };
 
+  var state = { user:null, theatres:[], networks:[], persistent:false, editingId:null };
+  var LS = { user:"myn_user", localAdd:"myn_local_add", localDel:"myn_local_del" };
+
+  /* ---------- Local fallback helpers ---------- */
+  function lsGet(k,def){ try{ var v=localStorage.getItem(k); return v?JSON.parse(v):def; }catch(e){ return def; } }
+  function lsSet(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+
+  function applyLocalOverlay(serverList){
+    var adds = lsGet(LS.localAdd,[]); var dels = lsGet(LS.localDel,[]);
+    var merged = serverList.filter(function(t){ return dels.indexOf(t.id)===-1; });
+    return merged.concat(adds.filter(function(t){ return dels.indexOf(t.id)===-1; }));
+  }
+
+  /* ---------- Data layer ---------- */
+  function api(path, opts){ return fetch("/api"+path, Object.assign({headers:{"content-type":"application/json"}}, opts||{})); }
+
+  async function loadData(){
+    try{
+      var r = await api("/bootstrap");
+      if(!r.ok) throw new Error("bootstrap "+r.status);
+      var d = await r.json();
+      state.networks = d.networks || [];
+      state.persistent = !!d.persistent;
+      if(state.persistent){ state.theatres = d.theatres; state.activity = d.activity||[]; }
+      else { state.theatres = applyLocalOverlay(d.theatres); state.activity = lsGet("myn_local_act",[]); }
+    }catch(e){
+      // total fallback: no server at all
+      state.persistent = false; state.networks = []; state.theatres = applyLocalOverlay([]); state.activity = lsGet("myn_local_act",[]);
+      toast("Mod local: modificările se salvează doar pe acest calculator.");
+    }
+    renderStorageNote();
+  }
+
+  function renderStorageNote(){
+    var el=$("#storage-note");
+    if(state.persistent){ el.innerHTML='Date partajate · salvare live pe Cloudflare'; }
+    else { el.innerHTML='Mod local (acest calculator) — stocarea partajată se activează după legarea KV'; }
+  }
+
+  async function addTheatre(obj){
+    obj._user = state.user;
+    if(state.persistent){
+      var r = await api("/theatres",{method:"POST",body:JSON.stringify(obj)});
+      if(r.status===201){ return await r.json(); }
+      if(r.status===503){ state.persistent=false; return addTheatre(obj); }
+      throw new Error("add "+r.status);
+    } else {
+      var item = Object.assign({id:"loc_"+Date.now().toString(36)+Math.random().toString(36).slice(2,6), builtin:false, addedBy:state.user}, obj);
+      delete item._user;
+      item.notable = Array.isArray(obj.notable)?obj.notable:[]; item.programs = Array.isArray(obj.programs)?obj.programs:[];
+      var adds=lsGet(LS.localAdd,[]); adds.push(item); lsSet(LS.localAdd,adds);
+      pushLocalAct({action:"add",user:state.user,name:item.name,id:item.id});
+      return item;
+    }
+  }
+
+  async function updateTheatre(id,obj){
+    obj._user = state.user;
+    if(state.persistent){
+      var r = await api("/theatres/"+encodeURIComponent(id),{method:"PUT",body:JSON.stringify(obj)});
+      if(!r.ok) throw new Error("edit "+r.status); return await r.json();
+    } else {
+      var adds=lsGet(LS.localAdd,[]); var i=adds.findIndex(function(t){return t.id===id;});
+      if(i>=0){ adds[i]=Object.assign(adds[i],obj); delete adds[i]._user; lsSet(LS.localAdd,adds); }
+      pushLocalAct({action:"edit",user:state.user,name:obj.name||id,id:id});
+      return obj;
+    }
+  }
+
+  async function deleteTheatre(id,name){
+    if(state.persistent){
+      var r = await api("/theatres/"+encodeURIComponent(id),{method:"DELETE",body:JSON.stringify({_user:state.user})});
+      if(!r.ok) throw new Error("del "+r.status);
+    } else {
+      var adds=lsGet(LS.localAdd,[]); var na=adds.filter(function(t){return t.id!==id;});
+      if(na.length!==adds.length){ lsSet(LS.localAdd,na); }
+      else { var dels=lsGet(LS.localDel,[]); if(dels.indexOf(id)===-1){dels.push(id);lsSet(LS.localDel,dels);} }
+      pushLocalAct({action:"delete",user:state.user,name:name,id:id});
+    }
+  }
+  function pushLocalAct(e){ var a=lsGet("myn_local_act",[]); a.unshift(Object.assign({at:new Date().toISOString()},e)); lsSet("myn_local_act",a.slice(0,300)); }
+
+  async function refresh(){ await loadData(); renderAll(); }
+
   /* ---------- Tabs ---------- */
-  var panels = {home:"home",dir:"dir",countries:"countries",map:"map-panel",networks:"networks",about:"about",contact:"contact"};
+  var panels={home:"home",dir:"dir",countries:"countries",map:"map-panel",networks:"networks",activity:"activity"};
   var mapInit=false;
   function show(tab){
-    document.querySelectorAll('nav.tabs button').forEach(function(b){
-      b.classList.toggle('active', b.dataset.tab===tab);
-    });
-    Object.keys(panels).forEach(function(k){
-      document.getElementById(panels[k]).classList.toggle('active', k===tab);
-    });
-    if(tab==='map'){ initMap(); }
-    window.scrollTo({top:0,behavior:'smooth'});
+    $$("nav.tabs button").forEach(function(b){ b.classList.toggle("active", b.dataset.tab===tab); });
+    Object.keys(panels).forEach(function(k){ $("#"+panels[k]).classList.toggle("active", k===tab); });
+    if(tab==="map") initMap();
+    if(tab==="activity") renderActivity();
+    window.scrollTo({top:0,behavior:"smooth"});
   }
-  document.getElementById('tabs').addEventListener('click',function(e){
-    var b=e.target.closest('button'); if(b) show(b.dataset.tab);
-  });
-  document.querySelectorAll('[data-goto]').forEach(function(el){
-    el.addEventListener('click',function(){show(el.dataset.goto);});
-  });
+  $("#tabs").addEventListener("click",function(e){ var b=e.target.closest("button"); if(b) show(b.dataset.tab); });
+  document.addEventListener("click",function(e){ var g=e.target.closest("[data-goto]"); if(g){ var t=g.dataset.goto; if(t==="dir"&&g.id==="stat-oldest"){ $("#f-sort").value="founded"; } show(t); render(); } });
 
-  /* ---------- Stats ---------- */
-  document.getElementById('s-theatres').textContent = DATA.length;
-  var countries = Array.from(new Set(DATA.map(function(d){return d.country;}))).sort();
-  document.getElementById('s-countries').textContent = countries.length;
-  var years = DATA.map(function(d){return d.founded;}).filter(Boolean);
-  document.getElementById('s-oldest').textContent = years.length?Math.min.apply(null,years):"—";
-  document.getElementById('s-networks').textContent = NETS.length;
-  document.getElementById('yr').textContent = new Date().getFullYear();
+  /* ---------- Render ---------- */
+  function renderAll(){ renderStats(); renderFilters(); render(); renderCountries(); renderNetworks(); renderActivity(); mapInit=false; if($("#map-panel").classList.contains("active")) initMap(); }
 
-  /* ---------- Filters population ---------- */
-  var fc=document.getElementById('f-country');
-  countries.forEach(function(c){var o=document.createElement('option');o.value=c;o.textContent=c;fc.appendChild(o);});
-  var forms = Array.from(new Set(DATA.map(function(d){return d.form;}))).sort();
-  var ff=document.getElementById('f-form');
-  forms.forEach(function(f){var o=document.createElement('option');o.value=f;o.textContent=f;ff.appendChild(o);});
+  function renderStats(){
+    var T=state.theatres;
+    $("#s-theatres").textContent=T.length;
+    var countries=uniq(T.map(function(t){return t.country;}));
+    $("#s-countries").textContent=countries.length;
+    var years=T.map(function(t){return t.founded;}).filter(Boolean);
+    $("#s-oldest").textContent=years.length?Math.min.apply(null,years):"—";
+    $("#s-networks").textContent=state.networks.length;
+    $("#yr").textContent=new Date().getFullYear();
+  }
+  function uniq(a){ return a.filter(function(v,i){return a.indexOf(v)===i;}).sort(); }
 
-  /* ---------- Render directory ---------- */
-  var listEl=document.getElementById('list'), emptyEl=document.getElementById('empty'), countEl=document.getElementById('count');
+  function renderFilters(){
+    var fc=$("#f-country"), fr=$("#f-region");
+    var cur=fc.value, curr=fr.value;
+    var countries=uniq(state.theatres.map(function(t){return t.country;}));
+    fc.innerHTML='<option value="">Toate țările</option>'+countries.map(function(c){return '<option'+(c===cur?' selected':'')+'>'+esc(c)+'</option>';}).join("");
+    var regions=uniq(state.theatres.map(function(t){return t.region;}).filter(Boolean));
+    fr.innerHTML='<option value="">Toate regiunile</option>'+regions.map(function(c){return '<option'+(c===curr?' selected':'')+'>'+esc(c)+'</option>';}).join("");
+  }
+
   function tcard(d){
-    var web = d.web
-      ? '<a class="t-web" href="https://'+esc(d.web)+'" target="_blank" rel="noopener">'+esc(d.web)+' ↗</a>'
-      : '<span class="t-web none">site indisponibil</span>';
-    return ''+
-    '<article class="t-card">'+
-      '<div class="t-top">'+
-        '<div><h3>'+esc(d.name)+'</h3>'+
-        '<div class="t-loc">'+esc(d.city)+', '+esc(d.country)+'</div></div>'+
-        '<div class="flag" title="'+esc(d.country)+'">'+flag(d.cc)+'</div>'+
-      '</div>'+
-      '<div class="t-meta">'+
-        (d.founded?'<span class="chip year">fondat '+esc(d.founded)+'</span>':'')+
-        (d.ages?'<span class="chip">'+esc(d.ages)+'</span>':'')+
-      '</div>'+
-      '<div class="t-focus">'+esc(d.focus)+'</div>'+
-      '<p class="t-note">'+esc(d.note)+'</p>'+
-      '<div class="t-foot">'+
-        '<span class="t-form">'+esc(d.form)+'</span>'+web+
-      '</div>'+
+    var web = d.web ? '<a class="t-web" href="https://'+esc(d.web)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">'+esc(d.web)+' ↗</a>' : '<span class="t-web none">fără site</span>';
+    return '<article class="t-card" data-id="'+esc(d.id)+'">'+
+      '<button class="icon-del" title="Șterge" data-del="'+esc(d.id)+'">✕</button>'+
+      '<div class="t-top"><div><h3>'+esc(d.name)+'</h3><div class="t-loc">'+esc(d.city)+', '+esc(d.country)+'</div></div><div class="flag">'+flag(d.cc)+'</div></div>'+
+      '<div class="t-meta">'+(d.founded?'<span class="chip year">fondat '+esc(d.founded)+'</span>':'')+(d.region?'<span class="chip">'+esc(d.region)+'</span>':'')+(d.ages?'<span class="chip">'+esc(d.ages)+'</span>':'')+(!d.builtin?'<span class="chip new">adăugat</span>':'')+'</div>'+
+      (d.focus?'<div class="t-focus">'+esc(d.focus)+'</div>':'')+
+      (d.description?'<p class="t-desc">'+esc(d.description)+'</p>':'')+
+      '<div class="t-foot"><button class="t-btn primary" data-detail="'+esc(d.id)+'">Detalii</button><button class="t-btn" data-edit="'+esc(d.id)+'">Editează</button>'+web+'</div>'+
     '</article>';
   }
+
   function render(){
-    var q=document.getElementById('q').value.trim().toLowerCase();
-    var cf=fc.value, frm=ff.value, sort=document.getElementById('f-sort').value;
-    var rows=DATA.filter(function(d){
+    var q=$("#q").value.trim().toLowerCase();
+    var cf=$("#f-country").value, rf=$("#f-region").value, sort=$("#f-sort").value;
+    var rows=state.theatres.filter(function(d){
       if(cf && d.country!==cf) return false;
-      if(frm && d.form!==frm) return false;
-      if(q){
-        var hay=(d.name+' '+d.city+' '+d.country+' '+d.focus+' '+d.note).toLowerCase();
-        if(hay.indexOf(q)===-1) return false;
-      }
+      if(rf && d.region!==rf) return false;
+      if(q){ var h=(d.name+" "+d.city+" "+d.country+" "+(d.focus||"")+" "+(d.description||"")).toLowerCase(); if(h.indexOf(q)===-1) return false; }
       return true;
     });
     rows.sort(function(a,b){
-      if(sort==='founded') return (a.founded||9999)-(b.founded||9999);
-      if(sort==='country') return a.country.localeCompare(b.country)|| a.name.localeCompare(b.name);
-      return a.name.localeCompare(b.name);
+      if(sort==="founded") return (a.founded||9999)-(b.founded||9999);
+      if(sort==="country") return (a.country||"").localeCompare(b.country)||(a.name||"").localeCompare(b.name);
+      return (a.name||"").localeCompare(b.name);
     });
-    listEl.innerHTML=rows.map(tcard).join('');
-    emptyEl.style.display=rows.length?'none':'block';
-    countEl.textContent=rows.length+' din '+DATA.length+' teatre';
+    $("#list").innerHTML=rows.map(tcard).join("");
+    $("#empty").style.display=rows.length?"none":"block";
+    $("#count").textContent=rows.length+" din "+state.theatres.length+" teatre";
   }
-  ['q','f-country','f-form','f-sort'].forEach(function(id){
-    document.getElementById(id).addEventListener('input',render);
-    document.getElementById(id).addEventListener('change',render);
-  });
-  render();
 
-  /* ---------- Countries tab ---------- */
-  var cg=document.getElementById('country-grid');
-  countries.map(function(c){
-    var items=DATA.filter(function(d){return d.country===c;});
-    return {c:c,cc:items[0].cc,n:items.length,cities:Array.from(new Set(items.map(function(i){return i.city;})))};
-  }).sort(function(a,b){return b.n-a.n || a.c.localeCompare(b.c);})
-    .forEach(function(o){
-      var el=document.createElement('div');el.className='c-card';
-      el.innerHTML='<div class="cf">'+flag(o.cc)+'</div>'+
-        '<h3>'+esc(o.c)+'</h3>'+
-        '<div class="cc-count">'+o.n+' teatr'+(o.n===1?'u':'e')+'</div>'+
-        '<div class="cc-cities">'+esc(o.cities.join(' · '))+'</div>';
-      el.addEventListener('click',function(){ fc.value=o.c; show('dir'); render(); });
-      cg.appendChild(el);
-    });
-
-  /* ---------- Networks tab ---------- */
-  var ng=document.getElementById('net-grid');
-  NETS.forEach(function(n){
-    var el=document.createElement('article');el.className='t-card';
-    el.innerHTML='<div class="t-top"><div><h3>'+esc(n.name)+'</h3>'+
-      '<div class="t-loc">'+esc(n.scope)+'</div></div></div>'+
-      '<div class="t-focus">'+esc(n.focus)+'</div>'+
-      '<p class="t-note">'+esc(n.note)+'</p>'+
-      '<div class="t-foot"><span class="t-form">Rețea / resursă</span>'+
-      (n.web?'<a class="t-web" href="https://'+esc(n.web)+'" target="_blank" rel="noopener">'+esc(n.web)+' ↗</a>':'')+
-      '</div>';
-    ng.appendChild(el);
+  // card actions (delegated)
+  $("#list").addEventListener("click",function(e){
+    var del=e.target.closest("[data-del]"); if(del){ e.stopPropagation(); askDelete(del.getAttribute("data-del")); return; }
+    var det=e.target.closest("[data-detail]"); if(det){ openDetail(det.getAttribute("data-detail")); return; }
+    var ed=e.target.closest("[data-edit]"); if(ed){ openForm(ed.getAttribute("data-edit")); return; }
+    var card=e.target.closest(".t-card"); if(card){ openDetail(card.getAttribute("data-id")); }
   });
+
+  function find(id){ return state.theatres.filter(function(t){return t.id===id;})[0]; }
+
+  function openDetail(id){
+    var d=find(id); if(!d) return;
+    $("#d-name").textContent=d.name;
+    $("#d-loc").textContent=d.city+", "+d.country+(d.region?" · "+d.region:"");
+    var dl='<dl class="dl">';
+    function row(k,v){ if(v) dl+='<dt>'+k+'</dt><dd>'+esc(v)+'</dd>'; }
+    row("An înființare",d.founded); row("Formă",d.form); row("Public-țintă",d.ages);
+    row("Limbi",d.languages); row("Fondatori",d.founders); row("Sală / sediu",d.venue);
+    row("Profil",d.focus);
+    dl+='</dl>';
+    var body=dl;
+    if(d.description) body+='<div class="detail-sec"><h4>Despre</h4><p class="detail-desc">'+esc(d.description)+'</p></div>';
+    if(d.notable&&d.notable.length) body+='<div class="detail-sec"><h4>Producții de referință</h4><ul>'+d.notable.map(function(x){return '<li>'+esc(x)+'</li>';}).join("")+'</ul></div>';
+    if(d.programs&&d.programs.length) body+='<div class="detail-sec"><h4>Programe</h4><ul>'+d.programs.map(function(x){return '<li>'+esc(x)+'</li>';}).join("")+'</ul></div>';
+    if(d.addedBy) body+='<div class="detail-sec"><h4>Adăugat de</h4><p class="detail-desc">'+esc(d.addedBy)+(d.editedBy?' · editat de '+esc(d.editedBy):'')+'</p></div>';
+    $("#d-body").innerHTML=body;
+    var web=$("#d-web");
+    if(d.web){ web.style.display=""; web.href="https://"+d.web; } else { web.style.display="none"; }
+    $("#d-edit").onclick=function(){ closeOverlay("#detail-overlay"); openForm(id); };
+    $("#d-delete").onclick=function(){ askDelete(id); };
+    openOverlay("#detail-overlay");
+  }
+
+  /* ---------- Form (add/edit) ---------- */
+  function openForm(id){
+    state.editingId=id||null;
+    var f=$("#theatre-form"); f.reset();
+    $("#f-title").textContent = id?"Editează teatru":"Adaugă teatru";
+    if(id){ var d=find(id); if(d){
+      ["name","country","cc","city","region","founded","ages","form","languages","focus","founders","venue","description","web"].forEach(function(k){ if(f[k]!=null) f[k].value=d[k]||""; });
+      f.notable.value=(d.notable||[]).join(", "); f.programs.value=(d.programs||[]).join(", ");
+    }}
+    closeOverlay("#detail-overlay"); openOverlay("#form-overlay");
+    setTimeout(function(){ f.name.focus(); },50);
+  }
+  $("#btn-add").addEventListener("click",function(){ openForm(null); });
+
+  $("#f-save").addEventListener("click", async function(){
+    var f=$("#theatre-form");
+    if(!f.name.value.trim()||!f.country.value.trim()||!f.city.value.trim()){ toast("Nume, țară și oraș sunt obligatorii."); return; }
+    var obj={ name:f.name.value.trim(), country:f.country.value.trim(), cc:f.cc.value.trim(), city:f.city.value.trim(),
+      region:f.region.value, founded:f.founded.value, ages:f.ages.value.trim(), form:f.form.value.trim(),
+      languages:f.languages.value.trim(), focus:f.focus.value.trim(), founders:f.founders.value.trim(),
+      venue:f.venue.value.trim(), description:f.description.value.trim(), web:f.web.value.trim().replace(/^https?:\/\//,""),
+      notable:splitList(f.notable.value), programs:splitList(f.programs.value) };
+    this.disabled=true; this.textContent="Se salvează…";
+    try{
+      if(state.editingId){ await updateTheatre(state.editingId,obj); toast("Teatru actualizat."); }
+      else { await addTheatre(obj); toast("Teatru adăugat."); }
+      closeOverlay("#form-overlay"); await refresh(); show("dir");
+    }catch(e){ toast("Eroare la salvare. Încearcă din nou."); }
+    this.disabled=false; this.textContent="Salvează";
+  });
+  function splitList(s){ return (s||"").split(",").map(function(x){return x.trim();}).filter(Boolean); }
+
+  function askDelete(id){
+    var d=find(id); if(!d) return;
+    if(!confirm('Ștergi „'+d.name+'” din rețea? Acțiunea apare în Activitate.')) return;
+    deleteTheatre(id,d.name).then(function(){ toast("Teatru șters."); closeOverlay("#detail-overlay"); return refresh(); }).catch(function(){ toast("Eroare la ștergere."); });
+  }
+
+  /* ---------- Countries ---------- */
+  function renderCountries(){
+    var by={};
+    state.theatres.forEach(function(t){ (by[t.country]=by[t.country]||[]).push(t); });
+    var arr=Object.keys(by).map(function(c){ var items=by[c]; return {c:c,cc:items[0].cc,n:items.length,cities:uniq(items.map(function(i){return i.city;}))}; });
+    arr.sort(function(a,b){return b.n-a.n||a.c.localeCompare(b.c);});
+    $("#country-grid").innerHTML=arr.map(function(o){
+      return '<button class="c-card" data-country="'+esc(o.c)+'"><div class="cf">'+flag(o.cc)+'</div><h3>'+esc(o.c)+'</h3><div class="cc-count">'+o.n+' teatr'+(o.n===1?'u':'e')+'</div><div class="cc-cities">'+esc(o.cities.join(" · "))+'</div></button>';
+    }).join("");
+  }
+  $("#country-grid").addEventListener("click",function(e){ var b=e.target.closest("[data-country]"); if(b){ $("#f-country").value=b.getAttribute("data-country"); show("dir"); render(); } });
+
+  /* ---------- Networks ---------- */
+  function renderNetworks(){
+    $("#net-grid").innerHTML=state.networks.map(function(n){
+      return '<article class="t-card"><div class="t-top"><div><h3>'+esc(n.name)+'</h3><div class="t-loc">'+esc(n.scope)+'</div></div></div>'+
+why(n)+'</article>';
+    }).join("");
+  }
+  function why(n){ return (n.focus?'<div class="t-focus">'+esc(n.focus)+'</div>':'')+(n.note?'<p class="t-desc" style="-webkit-line-clamp:4">'+esc(n.note)+'</p>':'')+'<div class="t-foot">'+(n.web?'<a class="t-web" style="margin-left:0" href="https://'+esc(n.web)+'" target="_blank" rel="noopener">'+esc(n.web)+' ↗</a>':'')+'</div>'; }
+
+  /* ---------- Activity ---------- */
+  function timeago(iso){ try{ var d=new Date(iso); var s=(Date.now()-d.getTime())/1000;
+    if(s<60) return "acum"; if(s<3600) return Math.floor(s/60)+" min"; if(s<86400) return Math.floor(s/3600)+" h";
+    return d.toLocaleDateString("ro-RO",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}); }catch(e){ return ""; } }
+  function renderActivity(){
+    var a=state.activity||[];
+    if(!a.length){ $("#act-list").style.display="none"; $("#act-empty").style.display="block"; return; }
+    $("#act-list").style.display=""; $("#act-empty").style.display="none";
+    var verb={add:"a adăugat",edit:"a editat",delete:"a șters"};
+    var ico={add:"＋",edit:"✎",delete:"✕"};
+    $("#act-list").innerHTML=a.map(function(e){
+      return '<div class="act-row"><div class="act-badge '+esc(e.action)+'">'+(ico[e.action]||"•")+'</div>'+
+        '<div class="act-main"><b>'+esc(e.user||"necunoscut")+'</b> '+(verb[e.action]||e.action)+' <b>'+esc(e.name||"")+'</b><div class="sub">'+esc(e.action)+'</div></div>'+
+        '<div class="act-time">'+timeago(e.at)+'</div></div>';
+    }).join("");
+  }
 
   /* ---------- Map ---------- */
   function initMap(){
-    if(mapInit) return; mapInit=true;
-    var map=L.map('map',{scrollWheelZoom:false}).setView([50.5,11],4);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
-      attribution:'&copy; OpenStreetMap &copy; CARTO', subdomains:'abcd', maxZoom:19
-    }).addTo(map);
-    var group=[];
-    DATA.forEach(function(d){
+    if(mapInit) return;
+    if(typeof L==="undefined"){ $("#map").innerHTML='<div style="padding:40px;text-align:center;color:var(--muted)">Harta nu s-a putut încărca (bibliotecă indisponibilă).</div>'; return; }
+    mapInit=true;
+    var map=L.map("map",{scrollWheelZoom:false}).setView([50,11],4);
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",{attribution:"&copy; OpenStreetMap &copy; CARTO",subdomains:"abcd",maxZoom:19}).addTo(map);
+    var grp=[];
+    state.theatres.forEach(function(d){
       var c=COORDS[d.city]; if(!c) return;
-      var jitter=[c[0]+(Math.random()-.5)*0.04, c[1]+(Math.random()-.5)*0.04];
-      var m=L.circleMarker(jitter,{radius:7,color:'#ff3b43',weight:2,fillColor:'#d81f26',fillOpacity:.85});
-      var web=d.web?'<br><a href="https://'+esc(d.web)+'" target="_blank" rel="noopener">'+esc(d.web)+' ↗</a>':'';
-      m.bindPopup('<div class="pop"><b>'+esc(d.name)+'</b><br><span class="pl">'+esc(d.city)+', '+esc(d.country)+'</span><br>'+esc(d.focus)+web+'</div>');
-      m.addTo(map); group.push(m);
+      var j=[c[0]+(Math.random()-.5)*0.05,c[1]+(Math.random()-.5)*0.05];
+      var m=L.circleMarker(j,{radius:7,color:"#9f1f18",weight:2,fillColor:"#c0271f",fillOpacity:.85});
+      var web=d.web?'<br><a href="https://'+esc(d.web)+'" target="_blank" rel="noopener">'+esc(d.web)+' ↗</a>':"";
+      m.bindPopup('<div class="pop"><b>'+esc(d.name)+'</b><br><span class="pl">'+esc(d.city)+', '+esc(d.country)+'</span><br>'+esc(d.focus||"")+web+'</div>');
+      m.addTo(map); grp.push(m);
     });
-    if(group.length){ map.fitBounds(L.featureGroup(group).getBounds().pad(0.15)); }
-    setTimeout(function(){map.invalidateSize();},200);
+    if(grp.length){ try{ map.fitBounds(L.featureGroup(grp).getBounds().pad(0.12)); }catch(e){} }
+    setTimeout(function(){ map.invalidateSize(); },250);
   }
+
+  /* ---------- Overlays ---------- */
+  function openOverlay(sel){ $(sel).classList.add("open"); document.body.style.overflow="hidden"; }
+  function closeOverlay(sel){ $(sel).classList.remove("open"); document.body.style.overflow=""; }
+  $$(".overlay").forEach(function(o){ o.addEventListener("click",function(e){ if(e.target===o||e.target.closest("[data-close]")) closeOverlay("#"+o.id); }); });
+  document.addEventListener("keydown",function(e){ if(e.key==="Escape"){ $$(".overlay.open").forEach(function(o){ closeOverlay("#"+o.id); }); } });
+
+  /* ---------- Toast ---------- */
+  var toastT;
+  function toast(msg){ var t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(function(){ t.classList.remove("show"); },2600); }
+
+  /* ---------- Login gate ---------- */
+  function startApp(name){
+    state.user=name;
+    $("#gate").style.display="none";
+    $("#hdr").style.display=""; $("#app").style.display=""; $("#ftr").style.display="";
+    $("#userchip").style.display="";
+    $("#user-name").textContent=name;
+    $("#user-av").textContent=(name.trim()[0]||"?").toUpperCase();
+    refresh();
+  }
+  function doLogin(){
+    var n=$("#gate-name").value.trim();
+    if(n.length<2){ $("#gate-name").focus(); return; }
+    lsSet(LS.user,n); startApp(n);
+  }
+  $("#gate-go").addEventListener("click",doLogin);
+  $("#gate-name").addEventListener("keydown",function(e){ if(e.key==="Enter") doLogin(); });
+  $("#user-switch").addEventListener("click",function(){ try{localStorage.removeItem(LS.user);}catch(e){} location.reload(); });
+
+  var saved=lsGet(LS.user,null);
+  if(saved){ startApp(saved); } else { setTimeout(function(){ $("#gate-name").focus(); },100); }
 })();
 </script>
 </body>

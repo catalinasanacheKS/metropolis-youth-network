@@ -1,50 +1,34 @@
 # Metropolis Youth Network
 
-Rețeaua teatrelor de tineret **independente / private de stat** din Europa — un
-proiect al **Teatrului Metropolis**, București.
+Platformă **internă** a Teatrului Metropolis pentru rețeaua teatrelor de tineret
+**independente / private de stat** din Europa.
 
-O aplicație web statică (un singur `index.html`) care documentează teatre de
-tineret și pentru tânărul public din Europa, în forme independente: asociații,
-fundații, cooperative, companii și case de teatru.
+Colegii intră cu **numele** (fără cont, fără parolă) și pot consulta, **adăuga,
+edita și șterge** teatre. Toate modificările apar la fila **Activitate**.
 
 ## Funcționalități
+- Login pe nume (platformă internă).
+- Catalog de teatre cu căutare, filtre pe țară și regiune, sortare.
+- Fișă detaliată per teatru: fondatori, sală, producții de referință, programe, descriere.
+- Adăugare / editare / ștergere, cu stocare partajată (Cloudflare KV).
+- Filă **Pe țări**, **Hartă** interactivă (Leaflet), **Rețele & Resurse**, **Activitate**.
+- Logo Teatrul Metropolis → link către teatrul-metropolis.ro.
 
-- **Director** cu căutare liberă și filtrare pe țară, formă de organizare și sortare.
-- **Pe țări** — distribuția geografică, cu click pentru filtrare.
-- **Hartă interactivă** (Leaflet + CARTO) cu marcaj pentru fiecare teatru și link către site.
-- **Rețele & Resurse** — organizațiile-cadru și programele europene de finanțare.
-- **Despre** și **Contact** (proiectemetropolis@gmail.com).
-- Logo Teatrul Metropolis → link către [teatrul-metropolis.ro](https://teatrul-metropolis.ro).
-
-## Structură
-
+## Arhitectură (Cloudflare Pages — advanced mode)
 ```
-index.html      – aplicația (HTML + CSS + JS, totul inline)
-data.js         – baza de date a teatrelor și rețelelor
-assets/logo.jpg – logo Teatrul Metropolis
+index.html        – aplicația (HTML + CSS + JS)
+assets/logo.jpg   – logo Teatrul Metropolis
+_worker.js        – Worker: servește fișierele + API JSON pe KV
 ```
+- `_worker.js` servește asset-urile statice (`env.ASSETS`) și expune `/api/*`.
+- Stocare: **KV**, binding `MYN_KV`. Fără binding, aplicația rulează în „mod local”
+  (modificările se salvează doar în browserul curent).
+- API: `GET /api/bootstrap`, `GET/POST /api/theatres`, `PUT/DELETE /api/theatres/:id`, `GET /api/activity`.
 
-## Rulare locală
-
-Fiind un site static, poate fi deschis direct sau servit local:
-
-```bash
-python3 -m http.server 8000
-# apoi deschide http://localhost:8000
-```
-
-## Publicare (Cloudflare Pages)
-
-Proiectul e pregătit pentru **Cloudflare Pages** (direct din acest repo GitHub
-sau prin încărcare directă). Nu necesită build — root-ul publicat este rădăcina
-repo-ului.
-
-## Date
-
-Datele sunt orientative și în completare. Criteriul de includere: organizare
-independentă/privată de stat + misiune centrată pe copii și/sau tineret.
-Corectări și adăugiri: **proiectemetropolis@gmail.com**.
+## Configurare KV
+1. Workers & Pages → KV → creează un namespace (ex. `metropolis-youth-network`).
+2. Proiect Pages → Settings → Bindings → KV namespace, variabilă `MYN_KV`.
+3. Redeploy.
 
 ---
-
-© Metropolis Youth Network · un proiect Teatrul Metropolis
+© Metropolis Youth Network · platformă internă Teatrul Metropolis
