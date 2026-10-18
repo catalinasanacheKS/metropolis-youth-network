@@ -1,34 +1,16 @@
 # Metropolis Youth Network
 
-Platformă **internă** a Teatrului Metropolis pentru rețeaua teatrelor de tineret
-**independente / private de stat** din Europa.
+Instrument intern al Teatrului Metropolis — catalogul rețelei europene de teatru tânăr.
 
-Colegii intră cu **numele** (fără cont, fără parolă) și pot consulta, **adăuga,
-edita și șterge** teatre. Toate modificările apar la fila **Activitate**.
+- Frontend static (SPA, hash-routing): `index.html` + `assets/`
+- Backend: `_worker.js` (Cloudflare Pages advanced worker) pe baza D1 `DB`
+- Hartă: Leaflet servit local din `assets/vendor` (fără CDN)
+- `seed-theatres.json`: folosit doar pentru a popula o bază D1 goală (în producție baza are deja datele)
 
-## Funcționalități
-- Login pe nume (platformă internă).
-- Catalog de teatre cu căutare, filtre pe țară și regiune, sortare.
-- Fișă detaliată per teatru: fondatori, sală, producții de referință, programe, descriere.
-- Adăugare / editare / ștergere, cu stocare partajată (Cloudflare KV).
-- Filă **Pe țări**, **Hartă** interactivă (Leaflet), **Rețele & Resurse**, **Activitate**.
-- Logo Teatrul Metropolis → link către teatrul-metropolis.ro.
+## Publicare (Cloudflare Pages — proiect „metropolis-youth-network", direct upload)
+Legătura D1 (`DB`) e deja configurată pe proiect, iar datele sunt în D1.
+Publică noua versiune cu wrangler (păstrează URL-ul metropolis-youth-network.pages.dev):
 
-## Arhitectură (Cloudflare Pages — advanced mode)
-```
-index.html        – aplicația (HTML + CSS + JS)
-assets/logo.jpg   – logo Teatrul Metropolis
-_worker.js        – Worker: servește fișierele + API JSON pe KV
-```
-- `_worker.js` servește asset-urile statice (`env.ASSETS`) și expune `/api/*`.
-- Stocare: **KV**, binding `MYN_KV`. Fără binding, aplicația rulează în „mod local”
-  (modificările se salvează doar în browserul curent).
-- API: `GET /api/bootstrap`, `GET/POST /api/theatres`, `PUT/DELETE /api/theatres/:id`, `GET /api/activity`.
+    npx wrangler pages deploy . --project-name metropolis-youth-network
 
-## Configurare KV
-1. Workers & Pages → KV → creează un namespace (ex. `metropolis-youth-network`).
-2. Proiect Pages → Settings → Bindings → KV namespace, variabilă `MYN_KV`.
-3. Redeploy.
-
----
-© Metropolis Youth Network · platformă internă Teatrul Metropolis
+Rollback oricând: Cloudflare → Pages → Deployments → versiunea veche → Rollback.

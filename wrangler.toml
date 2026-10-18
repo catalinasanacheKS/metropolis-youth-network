@@ -1,0 +1,6 @@
+name = "metropolis-youth-network"
+pages_build_output_dir = "."
+compatibility_date = "2024-11-01"
+# Binding (already configured on the Cloudflare Pages project):
+#   D1 database  ->  variable name: DB  ->  database: metropolis-youth-network
+# No build step: static site + _worker.js served from the repo root.

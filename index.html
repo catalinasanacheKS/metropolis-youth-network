@@ -11,8 +11,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <!-- Leaflet (CDN — cdnjs) -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" referrerpolicy="no-referrer" />
+  <!-- Leaflet (vendored locally — no external dependency) -->
+  <link rel="stylesheet" href="assets/vendor/leaflet.css" />
 
   <link rel="stylesheet" href="assets/styles.css" />
 </head>
@@ -61,7 +61,7 @@
   <!-- Toast host -->
   <div class="toast-host" id="toast-host" aria-live="polite"></div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" referrerpolicy="no-referrer"></script>
+  <script src="assets/vendor/leaflet.js"></script>
   <script src="assets/data.js"></script>
   <script src="assets/app.js"></script>
 </body>

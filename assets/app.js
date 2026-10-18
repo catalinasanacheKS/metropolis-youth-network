@@ -1,7 +1,7 @@
 /* ==================================================================
    Metropolis Youth Network — frontend app
    Works in two modes:
-   - CLOUD  : talks to /api/* (Cloudflare Pages advanced worker _worker.js + KV)
+   - CLOUD  : talks to /api/* (Cloudflare Pages Functions + D1)
    - LOCAL  : localStorage + embedded seed (preview / offline / fallback)
    ================================================================== */
 (() => {
@@ -43,7 +43,7 @@
       if (!localStorage.getItem(LS.theatres)) local.write(LS.theatres, window.MYN_SEED || []);
     },
     async list() {
-      if (MODE === "cloud") { const r = await fetch("/api/theatres"); const d = await r.json(); return Array.isArray(d) ? d : (d.theatres || []); }
+      if (MODE === "cloud") { const r = await fetch("/api/theatres"); return (await r.json()).theatres || []; }
       return local.read(LS.theatres, window.MYN_SEED || []);
     },
     async get(id) {
@@ -52,9 +52,9 @@
     },
     async add(obj) {
       if (MODE === "cloud") {
-        const r = await fetch("/api/theatres", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(Object.assign({}, obj, { _user: state.user || "" })) });
+        const r = await fetch("/api/theatres", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(obj) });
         if (!r.ok) throw new Error("add failed");
-        return await r.json();
+        return (await r.json()).theatre;
       }
       const all = local.read(LS.theatres, []);
       obj.id = obj.id || slug(obj.name) + "-" + Math.random().toString(36).slice(2, 6);
@@ -64,7 +64,7 @@
     },
     async remove(id, name) {
       if (MODE === "cloud") {
-        const r = await fetch("/api/theatres/" + encodeURIComponent(id), { method: "DELETE", headers: { "content-type": "application/json", "x-user": state.user || "" }, body: JSON.stringify({ _user: state.user || "" }) });
+        const r = await fetch("/api/theatres/" + encodeURIComponent(id), { method: "DELETE", headers: { "x-user": state.user || "" } });
         if (!r.ok) throw new Error("delete failed");
         return;
       }
@@ -73,7 +73,7 @@
       await this.log("delete", name, id);
     },
     async activity() {
-      if (MODE === "cloud") { const r = await fetch("/api/activity"); const d = await r.json(); return Array.isArray(d) ? d : (d.activity || []); }
+      if (MODE === "cloud") { const r = await fetch("/api/activity"); return (await r.json()).activity || []; }
       return local.read(LS.activity, []);
     },
     async log(action, target, targetId) {
@@ -589,7 +589,7 @@
   async function updateTheatre(obj) {
     if (MODE === "cloud") {
       const r = await fetch("/api/theatres/" + encodeURIComponent(obj.id), {
-        method: "PUT", headers: { "content-type": "application/json", "x-user": state.user || "" }, body: JSON.stringify(Object.assign({}, obj, { _user: state.user || "" }))
+        method: "PUT", headers: { "content-type": "application/json", "x-user": state.user || "" }, body: JSON.stringify(obj)
       });
       if (!r.ok) throw new Error("update failed");
       return;
