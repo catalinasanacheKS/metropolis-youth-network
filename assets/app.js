@@ -261,6 +261,18 @@
   const CAT_LABELS = { "Teatru de stat": "Teatre de stat", "Universitate": "Universități", "Companie independentă": "Companii independente" };
   function catClsOf(c) { return c === "Teatru de stat" ? "cat-stat" : c === "Universitate" ? "cat-acad" : "cat-indep"; }
 
+  function filteredList() {
+    let list = (state.theatres || []).slice();
+    const q = (state.filter.q || "").trim().toLowerCase();
+    if (q) list = list.filter(t => (t.name + " " + t.city + " " + t.country + " " + (t.tagline || "") + " " + (t.profile || "")).toLowerCase().includes(q));
+    if (state.filter.country) list = list.filter(t => t.country === state.filter.country);
+    if (state.filter.category) list = list.filter(t => classify(t) === state.filter.category);
+    if (state.filter.mission) list = list.filter(t => t.missionFit);
+    const s = state.filter.sort;
+    list.sort((a, b) => s === "founded" ? (a.founded || 9999) - (b.founded || 9999) : (a[s] || "").localeCompare(b[s] || "", "ro"));
+    return list;
+  }
+
   route("/director", async (app, param) => {
     const T = await DB.list();
     state.theatres = T;
@@ -306,14 +318,7 @@
     drawCards();
 
     function drawCards() {
-      let list = state.theatres.slice();
-      const q = state.filter.q.trim().toLowerCase();
-      if (q) list = list.filter(t => (t.name + " " + t.city + " " + t.country + " " + (t.tagline || "") + " " + (t.profile || "")).toLowerCase().includes(q));
-      if (state.filter.country) list = list.filter(t => t.country === state.filter.country);
-      if (state.filter.category) list = list.filter(t => classify(t) === state.filter.category);
-      if (state.filter.mission) list = list.filter(t => t.missionFit);
-      const s = state.filter.sort;
-      list.sort((a, b) => s === "founded" ? (a.founded || 9999) - (b.founded || 9999) : (a[s] || "").localeCompare(b[s] || "", "ro"));
+      const list = filteredList();
       $("#f-count").textContent = `${list.length} din ${state.theatres.length} teatre`;
       const wrap = $("#cards");
       wrap.innerHTML = "";
@@ -628,46 +633,111 @@
     };
   }
 
-  /* ---------------- Export PDF (print-optimized catalog) ---------------- */
+  /* ---------------- Export PDF (descarcă fișier, respectă filtrele active) ---------------- */
+  function filterSummary() {
+    const parts = [];
+    if (state.filter.country) parts.push(state.filter.country);
+    if (state.filter.category) parts.push(CAT_LABELS[state.filter.category] || state.filter.category);
+    if (state.filter.mission) parts.push("doar relevante pentru Metropolis ★");
+    if ((state.filter.q || "").trim()) parts.push("căutare: „" + state.filter.q.trim() + "”");
+    return parts.length ? parts.join(" · ") : "Toate instituțiile";
+  }
+
+  async function ensureHtml2pdf() {
+    if (window.html2pdf) return;
+    await new Promise((resolve, reject) => {
+      const s = document.createElement("script");
+      s.src = "assets/vendor/html2pdf.bundle.min.js";
+      s.onload = resolve;
+      s.onerror = () => reject(new Error("Nu s-a putut încărca generatorul PDF."));
+      document.head.appendChild(s);
+    });
+  }
+
   async function exportPDF() {
-    const T = await DB.list();
+    const list = filteredList();
+    if (!list.length) { toast("Nicio instituție în selecția curentă.", "err"); return; }
+    toast("Se generează PDF-ul… (câteva secunde)", "ok");
+    try { await ensureHtml2pdf(); } catch (e) { toast(e.message, "err"); return; }
+
     const byC = {};
-    T.forEach(t => { (byC[t.country] = byC[t.country] || []).push(t); });
+    list.forEach(t => { (byC[t.country] = byC[t.country] || []).push(t); });
     const countries = Object.keys(byC).sort((a, b) => a.localeCompare(b, "ro"));
     const today = new Date().toLocaleDateString("ro-RO", { day: "numeric", month: "long", year: "numeric" });
-    const stat = T.filter(t => classify(t) === "Teatru de stat").length;
-    const univ = T.filter(t => classify(t) === "Universitate").length;
-    const indep = T.filter(t => classify(t) === "Companie independentă").length;
-    let old = $("#print-root"); if (old) old.remove();
-    const root = el("div"); root.id = "print-root";
-    root.innerHTML = `
-      <div class="pr-cover">
-        <div class="pr-brand">Metropolis Youth Network</div>
-        <div class="pr-sub">Rețeaua europeană de teatru tânăr</div>
-        <h1 class="pr-title">Catalogul teatrelor</h1>
-        <p class="pr-lead">Teatre de stat și academii de stat din Europa unde urcă pe scenă actori tineri (18–35), pentru publicul larg. Instrument intern de documentare și parteneriat al Teatrului Metropolis. <b>★ = relevant pentru Metropolis.</b></p>
-        <div class="pr-stats"><span><b>${T.length}</b> instituții</span><span><b>${countries.length}</b> țări</span><span><b>${stat}</b> teatre de stat</span><span><b>${univ}</b> universități</span><span><b>${indep}</b> companii independente</span></div>
-        <div class="pr-date">Generat: ${today}</div>
-      </div>
-      ${countries.map(c => `
-        <section class="pr-country">
-          <h2 class="pr-cname">${flag(byC[c][0].cc)} ${esc(c)} <span>· ${byC[c].length} ${byC[c].length === 1 ? "teatru" : "teatre"}</span></h2>
-          ${byC[c].slice().sort((a, b) => a.name.localeCompare(b.name, "ro")).map(t => `
-            <div class="pr-theatre">
-              <h3>${esc(t.name)} ${t.missionFit ? '<span class="pr-star">★</span>' : ''}</h3>
-              <div class="pr-th-meta">${esc(t.city)} · ${esc(classify(t))}${t.founded ? ` · fondat ${esc(t.founded)}` : ""}${t.ageRange ? ` · actori ${esc(t.ageRange)}` : ""}</div>
-              ${t.metropolisRelevance ? `<p class="pr-rel"><b>Relevant pentru Metropolis:</b> ${esc(t.metropolisRelevance)}</p>` : ""}
-              ${t.profile ? `<p class="pr-profile">${esc(t.profile)}</p>` : ""}
-              ${t.website ? `<p class="pr-web">🔗 ${esc(host(t.website))}</p>` : ""}
+    const stat = list.filter(t => classify(t) === "Teatru de stat").length;
+    const univ = list.filter(t => classify(t) === "Universitate").length;
+    const indep = list.filter(t => classify(t) === "Companie independentă").length;
+
+    const S = {
+      page: "width:794px;box-sizing:border-box;padding:0 34px;background:#fff;color:#1a1a18;font-family:'Inter',Arial,sans-serif;",
+      cover: "page-break-after:always;text-align:center;padding:150px 20px 40px;",
+      brand: "font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:#a33;font-weight:700;",
+      sub: "font-size:13px;color:#777;margin:6px 0 32px;",
+      title: "font-family:'Fraunces',Georgia,serif;font-size:40px;font-weight:600;margin:0 0 16px;",
+      lead: "font-size:13px;line-height:1.6;color:#444;max-width:560px;margin:0 auto 20px;",
+      sel: "font-size:13px;color:#a33;font-weight:600;margin:0 auto 22px;",
+      stats: "font-size:13px;color:#333;line-height:2;",
+      date: "font-size:12px;color:#999;margin-top:22px;",
+      cname: "font-family:'Fraunces',Georgia,serif;font-size:19px;font-weight:600;color:#a33;border-bottom:2px solid #eadfe0;padding:14px 0 6px;margin:20px 0 10px;",
+      th: "page-break-inside:avoid;break-inside:avoid;margin:0 0 11px;padding:0 0 9px;border-bottom:1px solid #e6e4dd;",
+      thh: "font-family:'Fraunces',Georgia,serif;font-size:15px;font-weight:600;margin:0 0 2px;",
+      meta: "font-size:11.5px;color:#666;margin:0 0 5px;",
+      rel: "font-size:12px;color:#333;margin:4px 0;",
+      prof: "font-size:12px;line-height:1.5;color:#333;margin:4px 0 0;",
+      web: "font-size:11.5px;color:#a33;margin:4px 0 0;",
+      foot: "text-align:center;font-size:11px;color:#999;padding:18px 0;",
+    };
+    const root = el("div");
+    root.id = "pdf-root";
+    root.style.cssText = S.page + "margin:0 auto;";
+    root.innerHTML =
+      `<div style="${S.cover}">
+        <div style="${S.brand}">Metropolis Youth Network</div>
+        <div style="${S.sub}">Rețeaua europeană de teatru tânăr</div>
+        <h1 style="${S.title}">Catalogul teatrelor</h1>
+        <p style="${S.lead}">Catalog al rețelei europene de teatru tânăr (actori 18–35). Instrument intern de documentare și parteneriat al Teatrului Metropolis. ★ = relevant pentru Metropolis.</p>
+        <p style="${S.sel}">Selecție: ${esc(filterSummary())}</p>
+        <div style="${S.stats}"><b>${list.length}</b> ${list.length === 1 ? "instituție" : "instituții"} &nbsp;·&nbsp; <b>${countries.length}</b> ${countries.length === 1 ? "țară" : "țări"}<br><b>${stat}</b> teatre de stat &nbsp;·&nbsp; <b>${univ}</b> universități &nbsp;·&nbsp; <b>${indep}</b> companii independente</div>
+        <div style="${S.date}">Generat: ${today}</div>
+      </div>` +
+      countries.map(c =>
+        `<section>
+          <h2 style="${S.cname}">${esc(c)} · ${byC[c].length} ${byC[c].length === 1 ? "instituție" : "instituții"}</h2>
+          ${byC[c].slice().sort((a, b) => a.name.localeCompare(b.name, "ro")).map(t =>
+            `<div style="${S.th}">
+              <h3 style="${S.thh}">${esc(t.name)}${t.missionFit ? " ★" : ""}</h3>
+              <div style="${S.meta}">${esc(t.city)} · ${esc(classify(t))}${t.founded ? " · fondat " + esc(t.founded) : ""}${t.ageRange ? " · actori " + esc(t.ageRange) : ""}</div>
+              ${t.metropolisRelevance ? `<p style="${S.rel}"><b>Relevant pentru Metropolis:</b> ${esc(t.metropolisRelevance)}</p>` : ""}
+              ${t.profile ? `<p style="${S.prof}">${esc(t.profile)}</p>` : ""}
+              ${t.website ? `<p style="${S.web}">${esc(host(t.website))}</p>` : ""}
             </div>`).join("")}
-        </section>`).join("")}
-      <div class="pr-foot">Metropolis Youth Network · instrument intern Teatrul Metropolis · ${today}</div>`;
+        </section>`).join("") +
+      `<div style="${S.foot}">Metropolis Youth Network · instrument intern Teatrul Metropolis · ${today}</div>`;
+    window.scrollTo(0, 0);
     document.body.appendChild(root);
-    document.body.classList.add("printing");
-    toast("Se pregătește PDF-ul… alege Salvează ca PDF în dialogul de print.", "ok");
-    setTimeout(() => window.print(), 120);
-    const cleanup = () => { document.body.classList.remove("printing"); const r = $("#print-root"); if (r) r.remove(); window.removeEventListener("afterprint", cleanup); };
-    window.addEventListener("afterprint", cleanup);
+    const ov = el("div");
+    ov.style.cssText = "position:fixed;inset:0;z-index:99999;background:rgba(250,249,246,.97);display:flex;align-items:center;justify-content:center;font-family:'Inter',Arial,sans-serif;font-size:16px;color:#a33;font-weight:600;";
+    ov.textContent = "Se generează PDF-ul…";
+    document.body.appendChild(ov);
+
+    const tag = (state.filter.country ? "-" + slug(state.filter.country) : "") + (state.filter.category ? "-" + slug(state.filter.category) : "");
+    const opt = {
+      margin: [10, 0, 12, 0],
+      filename: "Catalog-Metropolis-Youth-Network" + tag + ".pdf",
+      image: { type: "jpeg", quality: 0.96 },
+      html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff", windowWidth: 794 },
+      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+      pagebreak: { mode: ["css", "legacy"] },
+    };
+    try {
+      await window.html2pdf().set(opt).from(root).save();
+      toast("PDF descărcat.", "ok");
+    } catch (e) {
+      toast("Eroare la generarea PDF: " + (e && e.message || e), "err");
+    } finally {
+      root.remove();
+      ov.remove();
+    }
   }
 
   /* ---------------- Boot ---------------- */
