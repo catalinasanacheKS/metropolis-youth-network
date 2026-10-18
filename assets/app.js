@@ -247,12 +247,26 @@
   const feature = (ic, h, p) => `<div class="feature"><div class="ic">${ic}</div><h3>${esc(h)}</h3><p>${esc(p)}</p></div>`;
 
   // DIRECTOR
+  function classify(t) {
+    const ty = (t.type || "").toLowerCase();
+    const nm = (t.name || "").toLowerCase();
+    if (/acc?adem|akadem|hochschule|universit|schule|seminar|institut|école|ecole|conservator/.test(ty)
+        || /acc?adem|akadem|hochschule|universit|schule|seminar|institut|école|ecole|conservator|\bdisk\b|collegium nobilium|studio marta|divadlo lab|[oó]dry/.test(nm))
+      return "Universitate";
+    if (/municipal|de stat|na[țt]ional/.test(ty)
+        || /jeune théâtre national|théâtre national de toulouse|la colline/.test(nm))
+      return "Teatru de stat";
+    return "Companie independentă";
+  }
+  const CAT_LABELS = { "Teatru de stat": "Teatre de stat", "Universitate": "Universități", "Companie independentă": "Companii independente" };
+  function catClsOf(c) { return c === "Teatru de stat" ? "cat-stat" : c === "Universitate" ? "cat-acad" : "cat-indep"; }
+
   route("/director", async (app, param) => {
     const T = await DB.list();
     state.theatres = T;
     if (param) state.filter.country = param;
     const countries = [...new Set(T.map(t => t.country))].sort((a, b) => a.localeCompare(b, "ro"));
-    const cats = [...new Set(T.map(t => t.category).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ro"));
+    const cats = ["Teatru de stat", "Universitate", "Companie independentă"];
     app.innerHTML = `
       <div class="wrap">
         <div class="page-head">
@@ -263,7 +277,7 @@
         <div class="toolbar">
           <div class="search">🔎<input id="f-q" placeholder="Caută nume, oraș, profil…" value="${esc(state.filter.q)}"></div>
           <select class="select" id="f-country"><option value="">Toate țările</option>${countries.map(c => `<option ${state.filter.country === c ? "selected" : ""}>${esc(c)}</option>`).join("")}</select>
-          <select class="select" id="f-category"><option value="">Toate tipurile</option>${cats.map(c => `<option ${state.filter.category === c ? "selected" : ""}>${esc(c)}</option>`).join("")}</select>
+          <select class="select" id="f-category"><option value="">Toate tipurile</option>${cats.map(c => `<option value="${esc(c)}" ${state.filter.category === c ? "selected" : ""}>${esc(CAT_LABELS[c])}</option>`).join("")}</select>
           <select class="select" id="f-sort">
             <option value="name" ${state.filter.sort === "name" ? "selected" : ""}>Sortează: nume</option>
             <option value="country" ${state.filter.sort === "country" ? "selected" : ""}>Sortează: țară</option>
@@ -296,7 +310,7 @@
       const q = state.filter.q.trim().toLowerCase();
       if (q) list = list.filter(t => (t.name + " " + t.city + " " + t.country + " " + (t.tagline || "") + " " + (t.profile || "")).toLowerCase().includes(q));
       if (state.filter.country) list = list.filter(t => t.country === state.filter.country);
-      if (state.filter.category) list = list.filter(t => t.category === state.filter.category);
+      if (state.filter.category) list = list.filter(t => classify(t) === state.filter.category);
       if (state.filter.mission) list = list.filter(t => t.missionFit);
       const s = state.filter.sort;
       list.sort((a, b) => s === "founded" ? (a.founded || 9999) - (b.founded || 9999) : (a[s] || "").localeCompare(b[s] || "", "ro"));
@@ -311,7 +325,7 @@
 
   function cardEl(t) {
     const c = el("div", "card");
-    const catCls = t.category === "Teatru de stat" ? "cat-stat" : "cat-acad";
+    const cat = classify(t); const catCls = catClsOf(cat);
     c.innerHTML = `
       <button class="card-del" title="Șterge" data-del="${esc(t.id)}">🗑</button>
       <div class="card-top">
@@ -321,7 +335,7 @@
       <div class="tagline">${esc(t.tagline || "")}</div>
       <p class="desc">${esc(truncate(t.profile || "", 110))}</p>
       <div class="card-meta">
-        ${t.category ? `<span class="tag ${catCls}">${esc(t.category)}</span>` : ""}
+        <span class="tag ${catCls}">${esc(cat)}</span>
         ${t.missionFit ? `<span class="tag mission">★ relevant pentru Metropolis</span>` : ""}
         ${t.ageRange ? `<span class="tag">actori ${esc(t.ageRange)}</span>` : ""}
         ${t.founded ? `<span class="tag year">fondat ${esc(t.founded)}</span>` : ""}
@@ -346,7 +360,7 @@
   route("/teatru", async (app, id) => {
     const t = await DB.get(id);
     if (!t) { app.innerHTML = `<div class="wrap"><p class="empty">Teatru inexistent. <a href="#/director">Înapoi la director</a></p></div>`; return; }
-    const catCls = t.category === "Teatru de stat" ? "cat-stat" : "cat-acad";
+    const cat = classify(t); const catCls = catClsOf(cat);
     const photo = t.photo
       ? `<div class="detail-photo" style="background-image:url('${esc(t.photo)}')"></div>`
       : `<div class="detail-photo placeholder"><span class="ph-flag">${flag(t.cc)}</span><span class="ph-name">${esc(t.name)}</span></div>`;
@@ -362,7 +376,7 @@
             <h1>${esc(t.name)}</h1>
             <div class="loc">${esc(t.city)}, ${esc(t.country)}</div>
             <div class="detail-badges">
-              ${t.category ? `<span class="tag ${catCls}">${esc(t.category)}</span>` : ""}
+              <span class="tag ${catCls}">${esc(cat)}</span>
               ${t.missionFit ? `<span class="tag mission">★ Relevant pentru Metropolis</span>` : ""}
               ${t.founded ? `<span class="tag year">fondat ${esc(t.founded)}</span>` : ""}
               ${t.ageRange ? `<span class="tag">actori ${esc(t.ageRange)}</span>` : ""}
@@ -383,7 +397,7 @@
             ${t.founded ? `<div class="fact"><span class="k">Înființare</span><span class="v">${esc(t.founded)}</span></div>` : ""}
             ${t.ageRange ? `<div class="fact"><span class="k">Actori (vârste)</span><span class="v">${esc(t.ageRange)}</span></div>` : ""}
             ${t.missionFit ? `<div class="fact"><span class="k">Relevant Metropolis</span><span class="v" style="color:var(--ok)">da ★</span></div>` : ""}
-            ${t.category ? `<div class="fact"><span class="k">Tip</span><span class="v">${esc(t.category)}</span></div>` : ""}
+            <div class="fact"><span class="k">Tip</span><span class="v">${esc(cat)}</span></div>
             <div class="fact"><span class="k">Formă</span><span class="v">${esc(t.type || "—")}</span></div>
             ${t.website ? `<div class="fact"><span class="k">Site</span><span class="v"><a href="${esc(normUrl(t.website))}" target="_blank" rel="noopener" style="color:var(--accent)">${esc(host(t.website))} ↗</a></span></div>` : ""}
             ${t.website ? `<a class="btn btn-accent" href="${esc(normUrl(t.website))}" target="_blank" rel="noopener">Vizitează site-ul ↗</a>` : ""}
@@ -621,8 +635,9 @@
     T.forEach(t => { (byC[t.country] = byC[t.country] || []).push(t); });
     const countries = Object.keys(byC).sort((a, b) => a.localeCompare(b, "ro"));
     const today = new Date().toLocaleDateString("ro-RO", { day: "numeric", month: "long", year: "numeric" });
-    const stat = T.filter(t => t.category === "Teatru de stat").length;
-    const acad = T.filter(t => t.category === "Academie de stat").length;
+    const stat = T.filter(t => classify(t) === "Teatru de stat").length;
+    const univ = T.filter(t => classify(t) === "Universitate").length;
+    const indep = T.filter(t => classify(t) === "Companie independentă").length;
     let old = $("#print-root"); if (old) old.remove();
     const root = el("div"); root.id = "print-root";
     root.innerHTML = `
@@ -631,7 +646,7 @@
         <div class="pr-sub">Rețeaua europeană de teatru tânăr</div>
         <h1 class="pr-title">Catalogul teatrelor</h1>
         <p class="pr-lead">Teatre de stat și academii de stat din Europa unde urcă pe scenă actori tineri (18–35), pentru publicul larg. Instrument intern de documentare și parteneriat al Teatrului Metropolis. <b>★ = relevant pentru Metropolis.</b></p>
-        <div class="pr-stats"><span><b>${T.length}</b> instituții</span><span><b>${countries.length}</b> țări</span><span><b>${stat}</b> teatre de stat</span><span><b>${acad}</b> academii de stat</span></div>
+        <div class="pr-stats"><span><b>${T.length}</b> instituții</span><span><b>${countries.length}</b> țări</span><span><b>${stat}</b> teatre de stat</span><span><b>${univ}</b> universități</span><span><b>${indep}</b> companii independente</span></div>
         <div class="pr-date">Generat: ${today}</div>
       </div>
       ${countries.map(c => `
@@ -640,7 +655,7 @@
           ${byC[c].slice().sort((a, b) => a.name.localeCompare(b.name, "ro")).map(t => `
             <div class="pr-theatre">
               <h3>${esc(t.name)} ${t.missionFit ? '<span class="pr-star">★</span>' : ''}</h3>
-              <div class="pr-th-meta">${esc(t.city)} · ${esc(t.category || "")}${t.founded ? ` · fondat ${esc(t.founded)}` : ""}${t.ageRange ? ` · actori ${esc(t.ageRange)}` : ""}</div>
+              <div class="pr-th-meta">${esc(t.city)} · ${esc(classify(t))}${t.founded ? ` · fondat ${esc(t.founded)}` : ""}${t.ageRange ? ` · actori ${esc(t.ageRange)}` : ""}</div>
               ${t.metropolisRelevance ? `<p class="pr-rel"><b>Relevant pentru Metropolis:</b> ${esc(t.metropolisRelevance)}</p>` : ""}
               ${t.profile ? `<p class="pr-profile">${esc(t.profile)}</p>` : ""}
               ${t.website ? `<p class="pr-web">🔗 ${esc(host(t.website))}</p>` : ""}
@@ -669,7 +684,7 @@
   (async function boot() {
     await DB.init();
     renderUser();
-    $("#footer-status").textContent = MODE === "cloud" ? "conectat la baza de date partajată" : "mod local (previzualizare)";
+    $("#footer-status").textContent = "";
     if (!location.hash) location.hash = "/";
     if (!state.user) { showGate(); } else { render(); }
   })();
