@@ -37,7 +37,7 @@ const FIELD_COLS = [
   ["founded", "founded"], ["type", "type"], ["website", "website"],
   ["ageRange", "age_range"], ["tagline", "tagline"], ["profile", "profile"],
   ["repertoire", "repertoire"], ["awards", "awards"], ["international", "international"],
-  ["missionFit", "mission"], ["lat", "lat"], ["lng", "lng"],
+  ["relevance", "mission"], ["lat", "lat"], ["lng", "lng"],
 ];
 
 function rowToObj(r) {
@@ -45,12 +45,17 @@ function rowToObj(r) {
     id: r.id, name: r.name, city: r.city, country: r.country, cc: r.cc,
     founded: r.founded, type: r.type, website: r.website, ageRange: r.age_range,
     tagline: r.tagline, profile: r.profile, repertoire: r.repertoire, awards: r.awards,
-    international: r.international, missionFit: !!r.mission, lat: r.lat, lng: r.lng,
+    international: r.international, relevance: Number(r.mission) || 0, missionFit: (Number(r.mission) || 0) > 0, lat: r.lat, lng: r.lng,
     createdAt: r.created_at, updatedAt: r.updated_at,
   };
 }
 function colValue(jsonKey, obj) {
-  if (jsonKey === "missionFit") return obj.missionFit ? 1 : 0;
+  if (jsonKey === "relevance") {
+    let n = obj.relevance;
+    if (n == null && obj.missionFit != null) n = obj.missionFit ? 1 : 0;
+    n = parseInt(n, 10);
+    return isNaN(n) ? 0 : Math.max(0, Math.min(5, n));
+  }
   if (jsonKey === "founded") return (obj.founded === "" || obj.founded == null) ? null : (parseInt(obj.founded, 10) || null);
   if (jsonKey === "lat" || jsonKey === "lng") return (obj[jsonKey] === "" || obj[jsonKey] == null) ? null : Number(obj[jsonKey]);
   const v = obj[jsonKey];

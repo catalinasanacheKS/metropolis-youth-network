@@ -261,15 +261,38 @@
   const CAT_LABELS = { "Teatru de stat": "Teatre de stat", "Universitate": "Universități", "Companie independentă": "Companii independente" };
   function catClsOf(c) { return c === "Teatru de stat" ? "cat-stat" : c === "Universitate" ? "cat-acad" : "cat-indep"; }
 
+  const relOf = (t) => Math.max(0, Math.min(5, parseInt(t && t.relevance, 10) || 0));
+  function relBars(n) {
+    n = Math.max(0, Math.min(5, parseInt(n, 10) || 0));
+    let s = `<span class="relbars" title="Relevanță Metropolis: ${n}/5" aria-label="Relevanță ${n} din 5">`;
+    for (let i = 1; i <= 5; i++) s += `<i class="relbar${i <= n ? " on" : ""}"></i>`;
+    return s + "</span>";
+  }
+  function relBarsText(n) {
+    n = Math.max(0, Math.min(5, parseInt(n, 10) || 0));
+    return "▮".repeat(n) + "▯".repeat(5 - n);
+  }
+  // Editable 0–5 picker (used in the add/edit form)
+  function relPickerHtml(val) {
+    val = Math.max(0, Math.min(5, parseInt(val, 10) || 0));
+    let segs = "";
+    for (let i = 1; i <= 5; i++) segs += `<button type="button" class="rp-seg${i <= val ? " on" : ""}" data-v="${i}" title="${i}/5"></button>`;
+    return `<div class="rel-picker" id="e-rel" data-val="${val}">${segs}<button type="button" class="rp-clear" data-v="0" title="Șterge">✕</button><span class="rp-num">${val}/5</span></div>`;
+  }
+
   function filteredList() {
     let list = (state.theatres || []).slice();
     const q = (state.filter.q || "").trim().toLowerCase();
     if (q) list = list.filter(t => (t.name + " " + t.city + " " + t.country + " " + (t.tagline || "") + " " + (t.profile || "")).toLowerCase().includes(q));
     if (state.filter.country) list = list.filter(t => t.country === state.filter.country);
     if (state.filter.category) list = list.filter(t => classify(t) === state.filter.category);
-    if (state.filter.mission) list = list.filter(t => t.missionFit);
+    if (state.filter.mission) list = list.filter(t => relOf(t) > 0);
     const s = state.filter.sort;
-    list.sort((a, b) => s === "founded" ? (a.founded || 9999) - (b.founded || 9999) : (a[s] || "").localeCompare(b[s] || "", "ro"));
+    list.sort((a, b) => {
+      if (s === "relevance") return relOf(b) - relOf(a) || a.name.localeCompare(b.name, "ro");
+      if (s === "founded") return (a.founded || 9999) - (b.founded || 9999);
+      return (a[s] || "").localeCompare(b[s] || "", "ro");
+    });
     return list;
   }
 
@@ -294,6 +317,7 @@
             <option value="name" ${state.filter.sort === "name" ? "selected" : ""}>Sortează: nume</option>
             <option value="country" ${state.filter.sort === "country" ? "selected" : ""}>Sortează: țară</option>
             <option value="founded" ${state.filter.sort === "founded" ? "selected" : ""}>Sortează: an înființare</option>
+            <option value="relevance" ${state.filter.sort === "relevance" ? "selected" : ""}>Sortează: relevanță ▮</option>
           </select>
           <label class="mission-toggle"><input type="checkbox" id="f-mission" ${state.filter.mission ? "checked" : ""}> doar relevante pentru Metropolis ★</label>
           <button class="btn btn-sm btn-pdf" id="f-pdf" title="Exportă catalogul ca PDF pentru print">⤓ Export PDF</button>
@@ -341,7 +365,7 @@
       <p class="desc">${esc(truncate(t.profile || "", 110))}</p>
       <div class="card-meta">
         <span class="tag ${catCls}">${esc(cat)}</span>
-        ${t.missionFit ? `<span class="tag mission">★ relevant pentru Metropolis</span>` : ""}
+        ${relOf(t) > 0 ? `<span class="tag mission">${relBars(relOf(t))} Metropolis</span>` : ""}
         ${t.ageRange ? `<span class="tag">actori ${esc(t.ageRange)}</span>` : ""}
         ${t.founded ? `<span class="tag year">fondat ${esc(t.founded)}</span>` : ""}
       </div>
@@ -382,7 +406,7 @@
             <div class="loc">${esc(t.city)}, ${esc(t.country)}</div>
             <div class="detail-badges">
               <span class="tag ${catCls}">${esc(cat)}</span>
-              ${t.missionFit ? `<span class="tag mission">★ Relevant pentru Metropolis</span>` : ""}
+              ${relOf(t) > 0 ? `<span class="tag mission">${relBars(relOf(t))} Metropolis</span>` : ""}
               ${t.founded ? `<span class="tag year">fondat ${esc(t.founded)}</span>` : ""}
               ${t.ageRange ? `<span class="tag">actori ${esc(t.ageRange)}</span>` : ""}
             </div>
@@ -401,7 +425,7 @@
             <div class="fact"><span class="k">Țară</span><span class="v">${flag(t.cc)} ${esc(t.country)}</span></div>
             ${t.founded ? `<div class="fact"><span class="k">Înființare</span><span class="v">${esc(t.founded)}</span></div>` : ""}
             ${t.ageRange ? `<div class="fact"><span class="k">Actori (vârste)</span><span class="v">${esc(t.ageRange)}</span></div>` : ""}
-            ${t.missionFit ? `<div class="fact"><span class="k">Relevant Metropolis</span><span class="v" style="color:var(--ok)">da ★</span></div>` : ""}
+            ${relOf(t) > 0 ? `<div class="fact"><span class="k">Relevanță Metropolis</span><span class="v">${relBars(relOf(t))} ${relOf(t)}/5</span></div>` : ""}
             <div class="fact"><span class="k">Tip</span><span class="v">${esc(cat)}</span></div>
             <div class="fact"><span class="k">Formă</span><span class="v">${esc(t.type || "—")}</span></div>
             ${t.website ? `<div class="fact"><span class="k">Site</span><span class="v"><a href="${esc(normUrl(t.website))}" target="_blank" rel="noopener" style="color:var(--accent)">${esc(host(t.website))} ↗</a></span></div>` : ""}
@@ -562,7 +586,7 @@
         </div>
       </div>
       <div class="field"><label>Formă de organizare (detaliat)</label><input id="e-type" value="${esc(e.type || "")}" placeholder="ex. Teatru municipal, Scenă a academiei de teatru"></div>
-      <div class="field"><label class="mission-toggle"><input type="checkbox" id="e-mission" ${e.missionFit ? "checked" : ""}> Marchează ca relevant pentru Metropolis ★</label></div>
+      <div class="field"><label>Relevanță pentru Metropolis (câte liniuțe, 0–5)</label>${relPickerHtml(relOf(e))}</div>
       <div class="field"><label>Site web</label><input id="e-website" value="${esc(e.website || "")}" placeholder="ex. teatru.de"></div>
       <div class="field"><label>Poză (link imagine)</label><input id="e-photo" value="${esc(e.photo || "")}" placeholder="https://… (opțional)"></div>
       <div class="field"><label>Scurtă descriere (tagline)</label><input id="e-tagline" value="${esc(e.tagline || "")}"></div>
@@ -579,13 +603,24 @@
         <button class="btn" onclick="MYN.closeModal()">Renunță</button>
         <button class="btn btn-primary" id="e-save">${t ? "Salvează" : "Adaugă"}</button>
       </div>`);
+    (function wireRel() {
+      const p = $("#e-rel"); if (!p) return;
+      const paint = () => { const v = +p.dataset.val || 0; p.querySelectorAll(".rp-seg").forEach(s => s.classList.toggle("on", (+s.dataset.v) <= v)); const n = p.querySelector(".rp-num"); if (n) n.textContent = v + "/5"; };
+      p.querySelectorAll("[data-v]").forEach(b => b.addEventListener("click", () => {
+        const v = +b.dataset.v;
+        p.dataset.val = b.classList.contains("rp-clear") ? 0 : (v === (+p.dataset.val) ? v - 1 : v);
+        paint();
+      }));
+      paint();
+    })();
+
     $("#e-save").onclick = async () => {
       const g = (id) => $("#" + id).value.trim();
       const obj = {
         id: e.id, name: g("e-name"), city: g("e-city"), country: g("e-country"),
         cc: g("e-cc").toUpperCase(), founded: g("e-founded") ? +g("e-founded") : null,
         ageRange: g("e-age"), category: $("#e-category").value, type: g("e-type"), website: g("e-website"),
-        photo: g("e-photo"), missionFit: $("#e-mission").checked,
+        photo: g("e-photo"), relevance: (function () { const p = $("#e-rel"); return p ? (parseInt(p.dataset.val, 10) || 0) : 0; })(),
         tagline: g("e-tagline"), metropolisRelevance: g("e-metropolis"),
         profile: g("e-profile"), repertoire: g("e-repertoire"),
         awards: g("e-awards"), international: g("e-international"),
@@ -660,9 +695,11 @@
     toast("Se generează PDF-ul… (câteva secunde)", "ok");
     try { await ensureHtml2pdf(); } catch (e) { toast(e.message, "err"); return; }
 
-    const byC = {};
-    list.forEach(t => { (byC[t.country] = byC[t.country] || []).push(t); });
-    const countries = Object.keys(byC).sort((a, b) => a.localeCompare(b, "ro"));
+    const countries = [...new Set(list.map(t => t.country))];
+    const CATS = ["Teatru de stat", "Universitate", "Companie independentă"];
+    const CAT_COL = { "Teatru de stat": "#6b3fa0", "Universitate": "#2f5d86", "Companie independentă": "#2f7d4f" };
+    const byCat = { "Teatru de stat": [], "Universitate": [], "Companie independentă": [] };
+    list.forEach(t => byCat[classify(t)].push(t));
     const today = new Date().toLocaleDateString("ro-RO", { day: "numeric", month: "long", year: "numeric" });
     const stat = list.filter(t => classify(t) === "Teatru de stat").length;
     const univ = list.filter(t => classify(t) === "Universitate").length;
@@ -695,23 +732,27 @@
         <div style="${S.brand}">Metropolis Youth Network</div>
         <div style="${S.sub}">Rețeaua europeană de teatru tânăr</div>
         <h1 style="${S.title}">Catalogul teatrelor</h1>
-        <p style="${S.lead}">Catalog al rețelei europene de teatru tânăr (actori 18–35). Instrument intern de documentare și parteneriat al Teatrului Metropolis. ★ = relevant pentru Metropolis.</p>
+        <p style="${S.lead}">Catalog al rețelei europene de teatru tânăr (actori 18–35). Instrument intern de documentare și parteneriat al Teatrului Metropolis. Grupat pe categorii; liniuțele ▮ indică relevanța pentru Metropolis (0–5).</p>
         <p style="${S.sel}">Selecție: ${esc(filterSummary())}</p>
         <div style="${S.stats}"><b>${list.length}</b> ${list.length === 1 ? "instituție" : "instituții"} &nbsp;·&nbsp; <b>${countries.length}</b> ${countries.length === 1 ? "țară" : "țări"}<br><b>${stat}</b> teatre de stat &nbsp;·&nbsp; <b>${univ}</b> universități &nbsp;·&nbsp; <b>${indep}</b> companii independente</div>
         <div style="${S.date}">Generat: ${today}</div>
       </div>` +
-      countries.map(c =>
-        `<section>
-          <h2 style="${S.cname}">${esc(c)} · ${byC[c].length} ${byC[c].length === 1 ? "instituție" : "instituții"}</h2>
-          ${byC[c].slice().sort((a, b) => a.name.localeCompare(b.name, "ro")).map(t =>
+      CATS.map(c => {
+        const items = byCat[c];
+        if (!items.length) return "";
+        items.sort((a, b) => relOf(b) - relOf(a) || a.name.localeCompare(b.name, "ro"));
+        const col = CAT_COL[c];
+        return `<section>
+          <h2 style="${S.cname}color:${col};border-bottom-color:${col};">${esc(CAT_LABELS[c])} · ${items.length}</h2>
+          ${items.map(t =>
             `<div style="${S.th}">
-              <h3 style="${S.thh}">${esc(t.name)}${t.missionFit ? " ★" : ""}</h3>
-              <div style="${S.meta}">${esc(t.city)} · ${esc(classify(t))}${t.founded ? " · fondat " + esc(t.founded) : ""}${t.ageRange ? " · actori " + esc(t.ageRange) : ""}</div>
-              ${t.metropolisRelevance ? `<p style="${S.rel}"><b>Relevant pentru Metropolis:</b> ${esc(t.metropolisRelevance)}</p>` : ""}
+              <h3 style="${S.thh}">${esc(t.name)}${relOf(t) > 0 ? ` <span style="color:${col};font-size:12px">${relBarsText(relOf(t))}</span>` : ""}</h3>
+              <div style="${S.meta}">${esc(t.city)}, ${esc(t.country)}${t.founded ? " · fondat " + esc(t.founded) : ""}${t.ageRange ? " · actori " + esc(t.ageRange) : ""}</div>
               ${t.profile ? `<p style="${S.prof}">${esc(t.profile)}</p>` : ""}
               ${t.website ? `<p style="${S.web}">${esc(host(t.website))}</p>` : ""}
             </div>`).join("")}
-        </section>`).join("") +
+        </section>`;
+      }).join("") +
       `<div style="${S.foot}">Metropolis Youth Network · instrument intern Teatrul Metropolis · ${today}</div>`;
     window.scrollTo(0, 0);
     document.body.appendChild(root);
