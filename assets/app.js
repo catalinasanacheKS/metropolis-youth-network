@@ -76,6 +76,10 @@
       if (MODE === "cloud") { const r = await fetch("/api/activity"); return (await r.json()).activity || []; }
       return local.read(LS.activity, []);
     },
+    async clearActivity() {
+      if (MODE === "cloud") { const r = await fetch("/api/activity", { method: "DELETE", headers: { "content-type": "application/json" } }); if (!r.ok) throw new Error("HTTP " + r.status); return (await r.json()); }
+      local.write(LS.activity, []); return { ok: true };
+    },
     async log(action, target, targetId) {
       if (MODE === "cloud") return; // server logs writes automatically
       const a = local.read(LS.activity, []);
@@ -534,11 +538,27 @@
     app.innerHTML = `
       <div class="wrap">
         <div class="page-head"><p class="eyebrow">Echipă</p><h1>Activitate</h1>
-          <p class="lede">Istoricul modificărilor aduse directorului de către echipă.</p></div>
+          <p class="lede">Istoricul modificărilor aduse directorului de către echipă.</p>
+          ${A.length ? `<button class="btn btn-sm" id="act-clear" style="margin-top:12px">🗑 Golește istoricul</button>` : ""}</div>
         <div class="activity-list">
           ${A.length ? A.map(actRow).join("") : `<div class="empty">Nicio activitate încă. Adaugă sau modifică un teatru în <a href="#/director">director</a>.</div>`}
         </div>
       </div>`;
+    const cb = $("#act-clear");
+    if (cb) cb.addEventListener("click", () => {
+      openModal(`
+        <button class="modal-close" onclick="MYN.closeModal()">×</button>
+        <h2>Golești tot istoricul de activitate?</h2>
+        <p class="modal-sub">Șterge definitiv toate ${A.length} intrările din filă. Teatrele nu sunt afectate.</p>
+        <div class="modal-actions">
+          <button class="btn" onclick="MYN.closeModal()">Renunță</button>
+          <button class="btn btn-accent" id="act-clear-confirm">Golește tot</button>
+        </div>`);
+      $("#act-clear-confirm").onclick = async () => {
+        try { await DB.clearActivity(); toast("Istoric golit.", "ok"); closeModal(); render(); }
+        catch (err) { toast("Nu s-a putut goli: " + err.message, "err"); }
+      };
+    });
   });
   function actRow(a) {
     const verb = a.action === "add" ? "a adăugat" : a.action === "delete" ? "a șters" : "a actualizat";
