@@ -202,6 +202,7 @@
   function splitRoute(hash) {
     if (hash.startsWith("/teatru/")) return ["/teatru", decodeURIComponent(hash.slice("/teatru/".length))];
     if (hash.startsWith("/tari/")) return ["/tari", decodeURIComponent(hash.slice("/tari/".length))];
+    if (hash.startsWith("/director/")) return ["/director", decodeURIComponent(hash.slice("/director/".length))];
     return [hash, null];
   }
 

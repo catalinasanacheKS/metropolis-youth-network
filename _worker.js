@@ -164,6 +164,11 @@ async function handleApi(request, env, url) {
     return json({ activity });
   }
 
+  if (path === "/activity" && method === "DELETE") {
+    const res = await env.DB.prepare("DELETE FROM activity").run();
+    return json({ ok: true, cleared: (res && res.meta && res.meta.changes) || 0 });
+  }
+
   return json({ error: "not_found" }, 404);
 }
 
