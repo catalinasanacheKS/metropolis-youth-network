@@ -322,9 +322,8 @@
             <option value="name" ${state.filter.sort === "name" ? "selected" : ""}>Sortează: nume</option>
             <option value="country" ${state.filter.sort === "country" ? "selected" : ""}>Sortează: țară</option>
             <option value="founded" ${state.filter.sort === "founded" ? "selected" : ""}>Sortează: an înființare</option>
-            <option value="relevance" ${state.filter.sort === "relevance" ? "selected" : ""}>Sortează: relevanță ▮</option>
+            <option value="relevance" ${state.filter.sort === "relevance" ? "selected" : ""}>Sortează: relevanță</option>
           </select>
-          <label class="mission-toggle"><input type="checkbox" id="f-mission" ${state.filter.mission ? "checked" : ""}> doar relevante pentru Metropolis ★</label>
           <button class="btn btn-sm btn-pdf" id="f-pdf" title="Exportă catalogul ca PDF pentru print">⤓ Export PDF</button>
           <span class="result-count" id="f-count"></span>
         </div>
@@ -335,14 +334,12 @@
       state.filter.country = $("#f-country").value;
       state.filter.category = $("#f-category").value;
       state.filter.sort = $("#f-sort").value;
-      state.filter.mission = $("#f-mission").checked;
       drawCards();
     };
     $("#f-q").addEventListener("input", apply);
     $("#f-country").addEventListener("change", apply);
     $("#f-category").addEventListener("change", apply);
     $("#f-sort").addEventListener("change", apply);
-    $("#f-mission").addEventListener("change", apply);
     $("#f-pdf").addEventListener("click", () => exportPDF());
     drawCards();
 
